@@ -275,6 +275,10 @@ void StartBoss(Game& g) {
 void UpdateBoss(Game& g, float dt) {
     Boss& b = g.boss;
     if (!b.active) return;
+    if (b.hp <= 0) {  // died to something other than a direct shot (e.g. debug skip)
+        BossDefeated(g);
+        return;
+    }
     if (b.squash > 0) b.squash = fmaxf(0.0f, b.squash - dt * 4.0f);
 
     switch (b.kind) {

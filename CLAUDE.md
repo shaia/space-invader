@@ -53,7 +53,8 @@ pattern, no ECS, no inheritance hierarchies, no exceptions for game flow.
 - Compiler warnings (`/W4 /permissive-`, `-Wall -Wextra`) apply to the game target
   only — never globally (raylib's C won't build clean).
 - Debug helpers live behind the `DEBUG_KEYS` flag in `config.h`: F1 stats overlay,
-  F2 skip wave, F3 grant power-up, F4 cycle modifier, F5 kill-all-but-one.
+  F2 skip wave (kills bosses too), F3 grant power-up, F4 cycle modifier,
+  F5 kill-all-but-one, F6 sacrifice a life.
 
 ## Git
 

@@ -106,10 +106,10 @@ Rectangle ShotRect(const Shot& s) {
 
 #if DEBUG_KEYS
 void DebugKeys(Game& g) {
-    if (IsKeyPressed(KEY_F2)) {  // skip wave
+    if (IsKeyPressed(KEY_F2)) {  // skip wave (kills the boss too; UpdateBoss notices hp<=0)
         for (auto& v : g.invaders) v.alive = false;
         g.aliveCount = 0;
-        if (g.boss.active) g.boss.hp = 0.01f;
+        if (g.boss.active) g.boss.hp = 0;
         if (!g.wave.clearing && !g.boss.active) FinishWave(g);
     }
     if (IsKeyPressed(KEY_F3))
@@ -129,6 +129,10 @@ void DebugKeys(Game& g) {
             g.invaders[i].alive = false;
             g.aliveCount--;
         }
+    }
+    if (IsKeyPressed(KEY_F6)) {  // sacrifice a life (tests death/game-over flow)
+        g.player.invuln = 0;
+        HitPlayer(g, "debug");
     }
 }
 #endif
