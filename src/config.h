@@ -8,8 +8,10 @@
 namespace cfg {
 
 // ---- canvas ----
-inline constexpr int   kCanvasW = 800;
+inline constexpr int   kCanvasW = 800;   // logical coordinates all code draws in
 inline constexpr int   kCanvasH = 950;
+inline constexpr int   kSupersample = 2; // canvas rasterized at 2x for crisp window scaling
+inline constexpr float kWindowFit = 0.90f; // initial window height as fraction of monitor
 inline constexpr float kDtClamp = 1.0f / 30.0f;
 
 // ---- playfield layout ----

@@ -320,8 +320,8 @@ void DrawHud(const Game& g) {
 
     const Modifier& m = CurrentMod(g);
     if (m.id != ModifierId::None) {
-        int mw = MeasureText(m.name, 12);
-        DrawText(m.name, cfg::kCanvasW / 2 - mw / 2, 38, 12, WithAlpha(cfg::kColAccent, 0.9f));
+        int mw = MeasureText(m.name, 15);
+        DrawText(m.name, cfg::kCanvasW / 2 - mw / 2, 38, 15, WithAlpha(cfg::kColAccent, 0.9f));
     }
 
     // lives as tiny cannons, bottom-left

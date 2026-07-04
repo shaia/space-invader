@@ -5,7 +5,8 @@
 
 namespace {
 constexpr float kToastDur = 3.2f;
-constexpr int kBubbleFont = 13;
+constexpr int kBubbleFont = 16;
+constexpr int kToastFont = 16;
 
 Vector2 GridCenter(const Game& g) {
     Vector2 sum{0, 0};
@@ -151,12 +152,12 @@ void DrawUiFx(const Game& g) {
         float slide = 1.0f;
         if (t.t < 0.25f) slide = t.t / 0.25f;
         if (kToastDur - t.t < 0.4f) slide = (kToastDur - t.t) / 0.4f;
-        int w = MeasureText(t.text.c_str(), 14);
+        int w = MeasureText(t.text.c_str(), kToastFont);
         float x = cfg::kCanvasW - (w + 26.0f) * slide;
-        float y = cfg::kCanvasH - 120.0f - shown * 30.0f;
-        DrawRectangleRec({x, y, (float)w + 20, 24}, WithAlpha({30, 32, 50, 255}, 0.85f));
-        DrawRectangleRec({x, y, 3, 24}, cfg::kColAccent);
-        DrawText(t.text.c_str(), (int)x + 10, (int)y + 5, 14, WithAlpha(RAYWHITE, slide));
+        float y = cfg::kCanvasH - 124.0f - shown * 34.0f;
+        DrawRectangleRec({x, y, (float)w + 20, 28}, WithAlpha({30, 32, 50, 255}, 0.85f));
+        DrawRectangleRec({x, y, 3, 28}, cfg::kColAccent);
+        DrawText(t.text.c_str(), (int)x + 10, (int)y + 6, kToastFont, WithAlpha(RAYWHITE, slide));
     }
 
     // ---- announcement card ----

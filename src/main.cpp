@@ -5,25 +5,34 @@
 #include <algorithm>
 
 int main() {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(cfg::kCanvasW, cfg::kCanvasH, "SPACE INVADERS: WE HAVE DEMANDS");
     SetExitKey(KEY_NULL);  // ESC is ours (pause/back)
     SetTargetFPS(60);
 
-    // fit small screens: shrink the window, keep the logical canvas fixed
+    // size the window to the monitor (upscale on big/high-DPI displays, shrink on small)
     int monitor = GetCurrentMonitor();
     int monH = GetMonitorHeight(monitor);
-    if (monH > 0 && monH - 100 < cfg::kCanvasH) {
-        float scale = (float)(monH - 100) / (float)cfg::kCanvasH;
+    if (monH > 0) {
+        float scale = (float)monH * cfg::kWindowFit / (float)cfg::kCanvasH;
+        if (scale < 0.5f) scale = 0.5f;
+        if (scale > 2.5f) scale = 2.5f;
         SetWindowSize((int)(cfg::kCanvasW * scale), (int)(cfg::kCanvasH * scale));
-        SetWindowPosition((GetMonitorWidth(monitor) - GetScreenWidth()) / 2, 40);
+        SetWindowPosition((GetMonitorWidth(monitor) - GetScreenWidth()) / 2,
+                          (monH - GetScreenHeight()) / 2);
     }
+    SetWindowMinSize(cfg::kCanvasW / 2, cfg::kCanvasH / 2);
 
     InitAudioDevice();
     AudioBank audio{};
     InitAudioBank(audio);
 
-    RenderTexture2D canvas = LoadRenderTexture(cfg::kCanvasW, cfg::kCanvasH);
+    // logical 800x950 canvas rasterized at 2x so it stays crisp at any window scale
+    RenderTexture2D canvas = LoadRenderTexture(cfg::kCanvasW * cfg::kSupersample,
+                                               cfg::kCanvasH * cfg::kSupersample);
     SetTextureFilter(canvas.texture, TEXTURE_FILTER_BILINEAR);
+    Camera2D ssCam{};
+    ssCam.zoom = (float)cfg::kSupersample;
 
     HighScores hs;
     hs.LoadOrDefaults();
@@ -46,6 +55,7 @@ int main() {
         Screen next = screen;
 
         BeginTextureMode(canvas);
+        BeginMode2D(ssCam);
         switch (screen) {
         case Screen::Title:
             next = UpdateDrawTitle(g, hs, screenTimer);
@@ -76,6 +86,7 @@ int main() {
             break;
         }
         DrawScanlines();
+        EndMode2D();
         EndTextureMode();
 
         if (next != screen) {
@@ -87,18 +98,21 @@ int main() {
             screenTimer = 0.0f;
         }
 
-        // blit the fixed canvas to the real window, shaken as required by drama
+        // blit the canvas to the window: aspect-preserving letterbox, shaken as drama requires
         float winW = (float)GetScreenWidth(), winH = (float)GetScreenHeight();
+        float fit = std::min(winW / (float)cfg::kCanvasW, winH / (float)cfg::kCanvasH);
+        float dstW = cfg::kCanvasW * fit, dstH = cfg::kCanvasH * fit;
         Vector2 shake = {0, 0};
         if (g.shake > 0.01f && (screen == Screen::Playing || screen == Screen::GameOver)) {
-            shake.x = g.rng.range(-g.shake, g.shake);
-            shake.y = g.rng.range(-g.shake, g.shake);
+            shake.x = g.rng.range(-g.shake, g.shake) * fit;
+            shake.y = g.rng.range(-g.shake, g.shake) * fit;
         }
         BeginDrawing();
         ClearBackground(BLACK);
         DrawTexturePro(canvas.texture,
-                       {0, 0, (float)cfg::kCanvasW, -(float)cfg::kCanvasH},
-                       {shake.x, shake.y, winW, winH}, {0, 0}, 0.0f, WHITE);
+                       {0, 0, (float)canvas.texture.width, -(float)canvas.texture.height},
+                       {(winW - dstW) / 2 + shake.x, (winH - dstH) / 2 + shake.y, dstW, dstH},
+                       {0, 0}, 0.0f, WHITE);
         EndDrawing();
     }
 

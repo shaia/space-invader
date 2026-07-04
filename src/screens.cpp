@@ -41,23 +41,23 @@ Screen UpdateDrawTitle(Game& g, const HighScores& hs, float timer) {
     DrawCenteredGlow("WE  HAVE  DEMANDS", 400, 30, cfg::kColPlayer);
 
     const char* flavor = content::kTitleFlavor[((int)(timer / 6.0f)) % content::kTitleFlavorCount];
-    DrawCentered(flavor, 448, 16, cfg::kColHud);
+    DrawCentered(flavor, 448, 18, cfg::kColHud);
 
     if (fmodf(timer, 1.0f) < 0.6f)
         DrawCenteredGlow("PRESS ENTER TO NEGOTIATE", 510, 22, RAYWHITE);
 
     // high-score table (the invaders keep the books)
-    DrawCentered("COLLECTIVE BARGAINING RECORDS", 570, 16, WithAlpha(cfg::kColAccent, 0.9f));
+    DrawCentered("COLLECTIVE BARGAINING RECORDS", 568, 18, WithAlpha(cfg::kColAccent, 0.9f));
     for (size_t i = 0; i < hs.table.size(); i++) {
         const ScoreEntry& e = hs.table[i];
         const char* line = TextFormat("%2d.  %-10s %8d", (int)i + 1, e.name.c_str(), e.score);
-        int w = MeasureText(line, 16);
-        DrawText(line, cfg::kCanvasW / 2 - w / 2, 600 + (int)i * 22, 16,
+        int w = MeasureText(line, 18);
+        DrawText(line, cfg::kCanvasW / 2 - w / 2, 598 + (int)i * 24, 18,
                  WithAlpha(cfg::kColHud, i % 2 ? 0.7f : 0.95f));
     }
 
-    DrawCentered("ARROWS/AD MOVE   SPACE FIRE   P PAUSE", 850, 14, WithAlpha(cfg::kColHud, 0.6f));
-    DrawCentered("(c) 1978, allegedly", 880, 14, WithAlpha(cfg::kColHud, 0.4f));
+    DrawCentered("ARROWS/AD MOVE   SPACE FIRE   P PAUSE", 850, 16, WithAlpha(cfg::kColHud, 0.6f));
+    DrawCentered("(c) 1978, allegedly", 882, 15, WithAlpha(cfg::kColHud, 0.4f));
 
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
         PlaySfx(*g.audio, Sfx::Blip);
@@ -73,8 +73,8 @@ Screen UpdateDrawPaused(const Game& g) {
 
     DrawCenteredGlow("PAUSED", 360, 48, cfg::kColAccent);
     const char* line = content::kPauseLines[((int)(GetTime() / 8.0)) % content::kPauseLineCount];
-    DrawCentered(line, 430, 18, cfg::kColHud);
-    DrawCentered("ESC/P RESUME      Q QUIT TO TITLE", 480, 16, WithAlpha(cfg::kColHud, 0.7f));
+    DrawCentered(line, 430, 20, cfg::kColHud);
+    DrawCentered("ESC/P RESUME      Q QUIT TO TITLE", 482, 18, WithAlpha(cfg::kColHud, 0.7f));
 
     if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)) return Screen::Playing;
     if (IsKeyPressed(KEY_Q)) return Screen::Title;
@@ -90,8 +90,8 @@ Screen UpdateDrawGameOver(Game& g, const HighScores& hs, float timer, float dt) 
 
     DrawCenteredGlow("GAME OVER", 340, 56, {255, 90, 90, 255});
     const char* verdict = g.overrun ? content::kOverrun : content::kGameOver;
-    Vector2 sz = MeasureTextEx(GetFontDefault(), verdict, 18, 1.0f);
-    DrawTextEx(GetFontDefault(), verdict, {cfg::kCanvasW / 2.0f - sz.x / 2, 420}, 18, 1.0f,
+    Vector2 sz = MeasureTextEx(GetFontDefault(), verdict, 20, 1.0f);
+    DrawTextEx(GetFontDefault(), verdict, {cfg::kCanvasW / 2.0f - sz.x / 2, 420}, 20, 1.0f,
                cfg::kColHud);
 
     DrawCenteredGlow(TextFormat("FINAL SCORE: %d", g.score), 490, 28, cfg::kColPlayer);
@@ -113,7 +113,7 @@ Screen UpdateDrawHighScoreEntry(Game& g, HighScores& hs, ScoreEntryState& es, fl
 
     DrawCenteredGlow("NEW HIGH SCORE", 260, 40, cfg::kColAccent);
     DrawCenteredGlow(TextFormat("%d", g.score), 320, 32, cfg::kColPlayer);
-    DrawCentered("The union requires your initials for the paperwork.", 380, 16, cfg::kColHud);
+    DrawCentered("The union requires your initials for the paperwork.", 380, 18, cfg::kColHud);
 
     // arcade-style initials
     for (int i = 0; i < 3; i++) {
@@ -126,7 +126,7 @@ Screen UpdateDrawHighScoreEntry(Game& g, HighScores& hs, ScoreEntryState& es, fl
             DrawRectangle((int)x - 24, 504, 48, 4, cfg::kColAccent);
     }
 
-    DrawCentered("UP/DOWN CHANGE   LEFT/RIGHT MOVE   ENTER SIGN", 560, 16,
+    DrawCentered("UP/DOWN CHANGE   LEFT/RIGHT MOVE   ENTER SIGN", 560, 18,
                  WithAlpha(cfg::kColHud, 0.7f));
 
     auto bump = [&](int dir) {
