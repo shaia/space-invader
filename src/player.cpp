@@ -2,7 +2,6 @@
 #include "game.h"
 #include "render.h"
 #include <cmath>
-#include <cstring>
 
 void PlayerFire(Game& g) {
     Player& p = g.player;
@@ -41,6 +40,7 @@ void PlayerFire(Game& g) {
         PlaySfx(*g.audio, Sfx::Shoot, g.rng.range(0.95f, 1.05f));
     }
 
+    SpawnMuzzle(g, muzzle, g.fx.pierce > 0 ? cfg::kColAccent : cfg::kColShot);
     p.fireCooldown = g.fx.rapid > 0 ? 0.13f : 0.05f;
     p.squash = 0.5f;
     g.noShootTimer = -1000.0f;  // pacifist window closed for this run
@@ -87,7 +87,7 @@ void UpdatePlayer(Game& g, float dt) {
     if (IsKeyDown(KEY_SPACE)) PlayerFire(g);
 }
 
-void HitPlayer(Game& g, const char* cause) {
+void HitPlayer(Game& g, std::string_view cause) {
     Player& p = g.player;
     if (!p.alive || p.invuln > 0) return;
 
@@ -100,7 +100,7 @@ void HitPlayer(Game& g, const char* cause) {
         return;
     }
 
-    if (cause && std::strcmp(cause, "compliment") == 0)
+    if (cause == "compliment")
         TryAward(g, Ach::FriendlyFire);
 
     p.alive = false;

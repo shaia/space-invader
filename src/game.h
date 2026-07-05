@@ -24,6 +24,7 @@ struct Game {
     Boss boss{};
     WaveState wave{};
     std::vector<Particle> particles;
+    std::vector<Star> stars;     // parallax background, seeded in ResetRun
     UiFx uifx{};
 
     int score = 0;
@@ -42,6 +43,8 @@ struct Game {
 
 // ---- game.cpp ----
 void ResetRun(Game& g);
+void InitStarfield(Game& g);
+void DrawBackground(const Game& g, float time);
 void StartWave(Game& g, int number);
 void UpdatePlaying(Game& g, float dt);
 void DrawPlaying(const Game& g);
@@ -61,7 +64,7 @@ void KillInvader(Game& g, int idx);
 
 // ---- player.cpp ----
 void UpdatePlayer(Game& g, float dt);
-void HitPlayer(Game& g, const char* cause);
+void HitPlayer(Game& g, std::string_view cause);
 void PlayerFire(Game& g);
 
 // ---- bunkers.cpp ----
@@ -97,16 +100,20 @@ void SpawnExplosion(Game& g, Vector2 pos, Color c, int count);
 void SpawnDebris(Game& g, Vector2 pos, Color c, int count);
 void SpawnConfetti(Game& g, Vector2 pos, int count);
 void SpawnTrail(Game& g, Vector2 pos, Color c);
+void SpawnShockwave(Game& g, Vector2 pos, Color c, float radius);
+void SpawnScorePop(Game& g, Vector2 pos, int points, Color c);
+void SpawnMuzzle(Game& g, Vector2 pos, Color c);
 void UpdateParticles(Game& g, float dt);
 void DrawParticles(const Game& g);
 
 // ---- ui_fx.cpp ----
-void PushToast(Game& g, const char* text);
-void PushBubble(Game& g, int anchor, const char* text, float dur = 4.0f);
-void Announce(Game& g, const char* big, const char* small, float dur);
+void PushToast(Game& g, std::string_view text);
+void PushBubble(Game& g, int anchor, std::string_view text, float dur = 4.0f);
+void Announce(Game& g, std::string_view big, std::string_view small, float dur);
 void TryAward(Game& g, Ach id);
 void UpdateUiFx(Game& g, float dt);
 void DrawUiFx(const Game& g);
+void DrawSpeechBubbles(const Game& g);  // drawn post-bloom so they stay crisp
 
 // ---- screens.cpp ----
 struct HighScores;

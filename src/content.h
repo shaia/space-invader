@@ -1,6 +1,7 @@
 // ALL joke text lives here. Tone: deadpan, dry, self-aware. See docs/GAME_DESIGN.md §1.
 #pragma once
 #include <cstddef>
+#include <string_view>
 
 namespace content {
 
@@ -57,7 +58,7 @@ inline constexpr const char* kToastBigShot  = "BIG GOVERNMENT - funding approved
 inline constexpr const char* kToastDejaVu   = "DEJA VU - continuity error.";
 
 // ---- achievements ----
-struct AchDef { const char* name; const char* desc; };
+struct AchDef { std::string_view name; std::string_view desc; };
 inline constexpr AchDef kAch[] = {
     {"PACIFIST RUN (7 SECONDS)", "You didn't shoot. The invaders noticed."},
     {"FRIENDLY FIRE",            "Killed by a compliment. It meant it."},
@@ -119,7 +120,7 @@ inline constexpr const char* kPlainWaveSmall[] = {
 inline constexpr int kPlainWaveSmallCount = (int)(sizeof(kPlainWaveSmall) / sizeof(kPlainWaveSmall[0]));
 
 // ---- default high scores ----
-struct DefaultScore { int score; const char* name; };
+struct DefaultScore { int score; std::string_view name; };
 inline constexpr DefaultScore kDefaultScores[] = {
     {10000, "CROW"}, {9000, "AAA"}, {8000, "DAD"}, {7000, "DEV"},
     {6000, "COIN"}, {5000, "SUE"}, {4000, "UFO"}, {3000, "HAL"},

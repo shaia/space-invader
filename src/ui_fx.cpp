@@ -44,26 +44,26 @@ bool AnchorPos(const Game& g, const Bubble& bb, Vector2& out) {
 }
 } // namespace
 
-void PushBubble(Game& g, int anchor, const char* text, float dur) {
+void PushBubble(Game& g, int anchor, std::string_view text, float dur) {
     if (g.uifx.bubbles.size() >= 2) g.uifx.bubbles.erase(g.uifx.bubbles.begin());
     Bubble b;
-    b.text = text;
+    b.text.assign(text);
     b.anchor = anchor;
     b.dur = dur;
     if (anchor == kBubbleAnchorFixed) b.pos = GridCenter(g);
     g.uifx.bubbles.push_back(b);
 }
 
-void PushToast(Game& g, const char* text) {
+void PushToast(Game& g, std::string_view text) {
     if ((int)g.uifx.toasts.size() >= 6) g.uifx.toasts.erase(g.uifx.toasts.begin());
     Toast t;
-    t.text = text;
+    t.text.assign(text);
     g.uifx.toasts.push_back(t);
 }
 
-void Announce(Game& g, const char* big, const char* small, float dur) {
-    g.uifx.card.big = big;
-    g.uifx.card.small = small;
+void Announce(Game& g, std::string_view big, std::string_view small, float dur) {
+    g.uifx.card.big.assign(big);
+    g.uifx.card.small.assign(small);
     g.uifx.card.t = 0;
     g.uifx.card.dur = dur;
 }
@@ -73,7 +73,7 @@ void TryAward(Game& g, Ach id) {
     if (g.uifx.achAwarded & bit) return;
     g.uifx.achAwarded |= bit;
     const content::AchDef& d = content::kAch[(int)id];
-    PushToast(g, TextFormat("ACHIEVEMENT: %s", d.name));
+    PushToast(g, TextFormat("ACHIEVEMENT: %s", d.name.data()));
     PushToast(g, d.desc);
     PlaySfx(*g.audio, Sfx::Ding);
 }
@@ -117,8 +117,10 @@ void UpdateUiFx(Game& g, float dt) {
     }
 }
 
-void DrawUiFx(const Game& g) {
-    // ---- speech bubbles ----
+// Speech bubbles use a bright white panel, so they are drawn in a separate crisp
+// overlay pass (main.cpp) *after* the bloom bright-pass — otherwise the bloom smears
+// them into a glowing smudge.
+void DrawSpeechBubbles(const Game& g) {
     for (const auto& b : g.uifx.bubbles) {
         Vector2 at;
         if (!AnchorPos(g, b, at)) continue;
@@ -144,7 +146,9 @@ void DrawUiFx(const Game& g) {
                      {bx + bw / 2 + 6, by + (by > at.y ? 0 : bh)}, tip, bg);
         DrawTextEx(GetFontDefault(), b.text.c_str(), {bx + pad, by + pad}, kBubbleFont, 1.0f, fg);
     }
+}
 
+void DrawUiFx(const Game& g) {
     // ---- toasts ----
     int shown = 0;
     for (int i = (int)g.uifx.toasts.size() - 1; i >= 0 && shown < cfg::kMaxToasts; i--, shown++) {

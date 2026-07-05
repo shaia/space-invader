@@ -24,6 +24,7 @@ void DimOverlay(float alpha) {
 
 Screen UpdateDrawTitle(Game& g, const HighScores& hs, float timer) {
     ClearBackground(cfg::kColBg);
+    DrawBackground(g, timer);
 
     // attract-mode demo grid marching behind the logo
     float t = timer;
@@ -88,7 +89,7 @@ Screen UpdateDrawGameOver(Game& g, const HighScores& hs, float timer, float dt) 
     DrawPlaying(g);
     DimOverlay(0.66f);
 
-    DrawCenteredGlow("GAME OVER", 340, 56, {255, 90, 90, 255});
+    DrawCenteredGlow("GAME OVER", 340, 56, cfg::kColHurt);
     const char* verdict = g.overrun ? content::kOverrun : content::kGameOver;
     Vector2 sz = MeasureTextEx(GetFontDefault(), verdict, 20, 1.0f);
     DrawTextEx(GetFontDefault(), verdict, {cfg::kCanvasW / 2.0f - sz.x / 2, 420}, 20, 1.0f,
@@ -110,6 +111,7 @@ Screen UpdateDrawGameOver(Game& g, const HighScores& hs, float timer, float dt) 
 
 Screen UpdateDrawHighScoreEntry(Game& g, HighScores& hs, ScoreEntryState& es, float timer) {
     ClearBackground(cfg::kColBg);
+    DrawBackground(g, timer);
 
     DrawCenteredGlow("NEW HIGH SCORE", 260, 40, cfg::kColAccent);
     DrawCenteredGlow(TextFormat("%d", g.score), 320, 32, cfg::kColPlayer);

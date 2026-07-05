@@ -28,9 +28,15 @@ add_executable(space_invader_plus
   src/ui_fx.cpp
   src/audio.cpp
   src/render.cpp
+  src/postfx.cpp
   src/highscores.cpp
   src/platform_paths.cpp
 )
+if(WIN32)
+  enable_language(RC)
+  target_sources(space_invader_plus PRIVATE res/app.rc)  # embeds the executable icon
+endif()
+
 target_link_libraries(space_invader_plus PRIVATE raylib)
 
 if(MSVC)
@@ -44,4 +50,22 @@ endif()
 if(APPLE)
   target_link_libraries(space_invader_plus PRIVATE
     "-framework IOKit" "-framework Cocoa" "-framework OpenGL")
+  # Build a .app bundle so Finder/Dock pick up the icon from Resources/.
+  set(icns ${CMAKE_CURRENT_SOURCE_DIR}/res/app.icns)
+  set_source_files_properties(${icns} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+  target_sources(space_invader_plus PRIVATE ${icns})
+  set_target_properties(space_invader_plus PROPERTIES
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_BUNDLE_NAME "Space Invaders"
+    MACOSX_BUNDLE_ICON_FILE app.icns)
+endif()
+
+# Linux: install the binary, hicolor icons, and desktop entry into an XDG prefix.
+if(UNIX AND NOT APPLE)
+  install(TARGETS space_invader_plus RUNTIME DESTINATION bin)
+  install(FILES res/space_invader_plus.desktop DESTINATION share/applications)
+  foreach(sz 16 32 48 64 128 256 512)
+    install(FILES res/linux/hicolor/${sz}x${sz}/apps/space_invader_plus.png
+      DESTINATION share/icons/hicolor/${sz}x${sz}/apps)
+  endforeach()
 endif()
