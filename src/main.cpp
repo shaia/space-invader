@@ -1,6 +1,7 @@
 // Entry point: window + RenderTexture setup, screen dispatch, the loop everything hangs off.
 #include "game.h"
 #include "highscores.h"
+#include "postfx.h"
 #include "render.h"
 #include <algorithm>
 
@@ -34,6 +35,10 @@ int main() {
     Camera2D ssCam{};
     ssCam.zoom = (float)cfg::kSupersample;
 
+    // bloom + CRT post-processing (falls back to a plain blit if shaders won't compile)
+    PostFx postfx{};
+    InitPostFx(postfx, cfg::kCanvasW * cfg::kSupersample, cfg::kCanvasH * cfg::kSupersample);
+
     HighScores hs;
     hs.LoadOrDefaults();
 
@@ -42,6 +47,7 @@ int main() {
     g.rng.s = (uint32_t)(GetTime() * 1e6) ^ 0x9E3779B9u;
     if (g.rng.s == 0) g.rng.s = 0x9E3779B9u;
     g.hiScore = hs.table[0].score;
+    InitStarfield(g);  // so the title screen has a starfield before the first run
 
     Screen screen = Screen::Title;
     float screenTimer = 0.0f;
@@ -85,7 +91,6 @@ int main() {
         case Screen::Quit:
             break;
         }
-        DrawScanlines();
         EndMode2D();
         EndTextureMode();
 
@@ -107,15 +112,33 @@ int main() {
             shake.x = g.rng.range(-g.shake, g.shake) * fit;
             shake.y = g.rng.range(-g.shake, g.shake) * fit;
         }
+        Rectangle dst = {(winW - dstW) / 2 + shake.x, (winH - dstH) / 2 + shake.y, dstW, dstH};
+
+        // bloom passes render into their own targets before we touch the backbuffer
+        if (postfx.enabled) RenderBloom(postfx, canvas.texture);
+
+        // speech bubbles draw AFTER the bright-pass: their white panels must not bloom
+        if (screen == Screen::Playing || screen == Screen::Paused || screen == Screen::GameOver) {
+            BeginTextureMode(canvas);
+            BeginMode2D(ssCam);
+            DrawSpeechBubbles(g);
+            EndMode2D();
+            EndTextureMode();
+        }
+
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawTexturePro(canvas.texture,
-                       {0, 0, (float)canvas.texture.width, -(float)canvas.texture.height},
-                       {(winW - dstW) / 2 + shake.x, (winH - dstH) / 2 + shake.y, dstW, dstH},
-                       {0, 0}, 0.0f, WHITE);
+        if (postfx.enabled) {
+            DrawComposite(postfx, canvas.texture, dst, cfg::kScanlines);
+        } else {
+            DrawTexturePro(canvas.texture,
+                           {0, 0, (float)canvas.texture.width, -(float)canvas.texture.height},
+                           dst, {0, 0}, 0.0f, WHITE);
+        }
         EndDrawing();
     }
 
+    UnloadPostFx(postfx);
     UnloadRenderTexture(canvas);
     UnloadAudioBank(audio);
     CloseAudioDevice();

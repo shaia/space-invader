@@ -16,8 +16,6 @@ void GlowText(const char* text, int x, int y, int size, Color c);
 // Entity art (center-based). frame is 0/1 march parity; squash scales comedy.
 void DrawInvaderArt(Vector2 c, float w, float h, int row, int frame, float squash,
                     Color tint, bool wobbly, float time, int seed);
-void DrawPlayerArt(Vector2 c, float w, float h, Color tint, float squash);
+void DrawPlayerArt(Vector2 c, float w, float h, Color tint, float squash, float time = 0.0f);
 void DrawUfoArt(Vector2 c, float w, float h, Color tint, float time);
 void DrawShotArt(const Game& g, const struct Shot& s);
-
-void DrawScanlines();

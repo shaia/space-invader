@@ -104,21 +104,72 @@ inline constexpr int   kSampleRate  = 44100;
 inline constexpr float kMasterSfx   = 0.65f;
 inline constexpr float kMasterMusic = 0.35f;
 
-// ---- colors (neon palette) ----
-inline constexpr Color kColBg        = {8, 8, 16, 255};
-inline constexpr Color kColPlayer    = {80, 255, 140, 255};
-inline constexpr Color kColRow[5]    = {{255, 90, 200, 255},   // executives (top)
-                                        {90, 200, 255, 255},   // managers
-                                        {90, 200, 255, 255},
-                                        {255, 220, 90, 255},   // interns
-                                        {255, 220, 90, 255}};
-inline constexpr Color kColOverachiever = {255, 80, 80, 255};
-inline constexpr Color kColUfo       = {200, 120, 255, 255};
-inline constexpr Color kColBunker    = {80, 255, 140, 255};
-inline constexpr Color kColShot      = {240, 255, 255, 255};
-inline constexpr Color kColBomb      = {255, 140, 90, 255};
-inline constexpr Color kColHud       = {180, 190, 210, 255};
-inline constexpr Color kColAccent    = {255, 90, 200, 255};
+// ---- colors (neon palette, saturated arcade) ----
+inline constexpr Color kColBg        = {6, 7, 20, 255};    // deep space blue-violet
+inline constexpr Color kColPlayer    = {80, 255, 170, 255};
+inline constexpr Color kColRow[5]    = {{255, 60, 190, 255},   // executives (top) - hot magenta
+                                        {70, 220, 255, 255},   // managers - cyan
+                                        {120, 150, 255, 255},  // managers - electric azure
+                                        {255, 210, 70, 255},   // interns - gold
+                                        {255, 140, 60, 255}};  // interns - amber orange
+inline constexpr Color kColOverachiever = {255, 60, 70, 255};
+inline constexpr Color kColUfo       = {200, 110, 255, 255};
+inline constexpr Color kColBunker    = {70, 240, 200, 255};
+inline constexpr Color kColShot      = {235, 255, 255, 255};
+inline constexpr Color kColBomb      = {255, 130, 70, 255};
+inline constexpr Color kColHud       = {170, 185, 215, 255};  // kept below bloom threshold
+inline constexpr Color kColAccent    = {255, 70, 190, 255};
 inline constexpr bool  kScanlines    = true;
+
+// consolidated literals (were scattered across draw files)
+inline constexpr Color kColHudBar    = {13, 14, 30, 255};
+inline constexpr Color kColBeamlet   = {255, 80, 100, 255};
+inline constexpr Color kColClipboard = {235, 225, 185, 255};
+inline constexpr Color kColCompliment= {255, 150, 205, 255};
+inline constexpr Color kColBrick     = {210, 70, 70, 255};
+inline constexpr Color kColHurt      = {255, 90, 100, 255};   // boss/hit red
+inline constexpr Color kColHair      = {255, 220, 150, 255};  // Karen's haircut
+inline constexpr Color kColSign      = {235, 225, 185, 255};  // protest signs
+inline constexpr Color kColProducer  = {96, 98, 128, 255};    // producer chassis
+inline constexpr Color kColProducerScreen = {18, 22, 46, 255};
+inline constexpr Color kColScopeCreep= {255, 170, 90, 255};   // producer's creep beam
+inline constexpr Color kColConfetti[4] = {{255, 60, 190, 255}, {70, 220, 255, 255},
+                                          {255, 210, 70, 255}, {80, 255, 170, 255}};
+
+// per-archetype invader detail colors (index: 0 squid, 1 crab, 2 octo)
+struct InvaderPalette { Color accent; Color eye; };
+inline constexpr InvaderPalette kInvPal[3] = {
+    {{255, 235, 160, 255}, {30, 12, 40, 255}},   // squid: warm accent, dark eyes
+    {{235, 255, 255, 255}, {20, 30, 60, 255}},   // crab: white highlight, navy eyes
+    {{255, 255, 210, 255}, {40, 20, 20, 255}},   // octo: pale accent, dark eyes
+};
+
+// ---- glow helper tuning ----
+inline constexpr float kGlowHalo      = 6.0f;   // outer halo px
+inline constexpr float kGlowHaloA     = 0.12f;  // outer halo alpha
+inline constexpr float kGlowMidA      = 0.28f;  // inner halo alpha
+inline constexpr float kGlowCircleOut = 1.9f;   // outer radius multiple
+inline constexpr float kGlowCircleMid = 1.25f;  // mid radius multiple
+
+// ---- bloom post-process ----
+inline constexpr float kBloomThreshold = 0.66f; // luminance cutoff for bright-pass
+inline constexpr float kBloomSoftKnee  = 0.28f; // soft threshold rolloff
+inline constexpr float kBloomIntensity = 1.15f; // additive bloom strength
+inline constexpr int   kBloomPasses    = 4;     // separable blur iterations (H+V each)
+inline constexpr int   kBloomDownscale = 2;     // bloom RT = canvas / this
+
+// ---- CRT composite ----
+inline constexpr float kCrtScanline   = 0.10f;  // scanline darkening depth
+inline constexpr float kCrtAberration = 0.0016f;// chromatic aberration (uv units)
+inline constexpr float kCrtBarrel     = 0.020f; // barrel distortion strength
+inline constexpr float kCrtVignette   = 0.32f;  // edge darkening
+inline constexpr float kCrtScanCount  = 340.0f; // number of scanline bands
+
+// ---- background / starfield ----
+inline constexpr int   kStarLayers    = 3;
+inline constexpr int   kStarsPerLayer = 80;
+inline constexpr Color kColNebula[3]  = {{120, 30, 140, 255},   // magenta cloud
+                                         {30, 70, 160, 255},    // blue cloud
+                                         {20, 110, 130, 255}};  // teal cloud
 
 } // namespace cfg

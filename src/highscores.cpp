@@ -10,7 +10,7 @@ const char* kHeader = "SIWHD v1";
 void FillDefaults(HighScores& hs) {
     for (size_t i = 0; i < hs.table.size(); i++) {
         hs.table[i].score = content::kDefaultScores[i].score;
-        hs.table[i].name = content::kDefaultScores[i].name;
+        hs.table[i].name.assign(content::kDefaultScores[i].name);
     }
 }
 } // namespace

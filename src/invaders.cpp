@@ -168,6 +168,7 @@ void KillInvader(Game& g, int idx) {
     Color c = cfg::kColRow[row];
     SpawnExplosion(g, v.pos, c, 16);
     SpawnDebris(g, v.pos, c, 5);
+    SpawnScorePop(g, {v.pos.x, v.pos.y - cfg::kInvaderH}, pts, c);
     float pitch = GridScale(g) < 1.0f ? 1.7f : g.rng.range(0.9f, 1.1f);
     PlaySfx(*g.audio, Sfx::Pop, pitch);
     g.shake = fmaxf(g.shake, 2.0f);

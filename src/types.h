@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "config.h"
@@ -53,7 +54,7 @@ struct Shot {
     bool fromPlayer = false;
     bool pierce = false;
     float spin = 0.0f;        // clipboards tumble
-    const char* label = nullptr; // compliment text
+    std::string_view label{}; // compliment text (view into static kCompliments)
 };
 
 struct Bunker {
@@ -95,8 +96,8 @@ enum class ModifierId : uint8_t {
 
 struct Modifier {
     ModifierId id = ModifierId::None;
-    const char* name = "";
-    const char* tagline = "";
+    std::string_view name = "";
+    std::string_view tagline = "";
     bool invertInput = false;
     bool invisibleInvaders = false;
     bool complimentBombs = false;
@@ -167,8 +168,17 @@ struct WaveState {
     bool bunkersWereGone = false;  // for This Is Fine
 };
 
+// ---- background ----
+struct Star {
+    Vector2 pos{};
+    float speed = 20.0f;   // downward scroll px/s (parallax by layer)
+    float size = 1.0f;
+    float phase = 0.0f;    // twinkle phase offset
+    Color tint = WHITE;
+};
+
 // ---- particles ----
-enum class ParticleKind : uint8_t { Spark, Debris, Confetti, Trail };
+enum class ParticleKind : uint8_t { Spark, Debris, Confetti, Trail, Shockwave, Smoke, ScorePop };
 
 struct Particle {
     Vector2 pos{};
@@ -178,6 +188,7 @@ struct Particle {
     float gravity = 0.0f;
     Color color = WHITE;
     ParticleKind kind = ParticleKind::Spark;
+    int value = 0;   // ScorePop: the number to draw
 };
 
 // ---- ui fx ----

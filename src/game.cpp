@@ -19,6 +19,26 @@ void AddScore(Game& g, int points) {
     if (g.score > g.hiScore) g.hiScore = g.score;
 }
 
+void InitStarfield(Game& g) {
+    g.stars.clear();
+    g.stars.reserve((size_t)cfg::kStarLayers * cfg::kStarsPerLayer);
+    // varied star tints: white / azure / rose / gold
+    const Color tints[4] = {{235, 240, 255, 255}, {150, 210, 255, 255},
+                            {255, 170, 220, 255}, {255, 225, 160, 255}};
+    for (int layer = 0; layer < cfg::kStarLayers; layer++) {
+        float depth = (float)layer / (float)(cfg::kStarLayers - 1);  // 0 far .. 1 near
+        for (int i = 0; i < cfg::kStarsPerLayer; i++) {
+            Star s;
+            s.pos = {g.rng.range(0, (float)cfg::kCanvasW), g.rng.range(0, (float)cfg::kCanvasH)};
+            s.speed = 6.0f + depth * 26.0f;    // near layers scroll faster
+            s.size = 0.6f + depth * 1.9f;
+            s.phase = g.rng.range(0, 6.2831f);
+            s.tint = tints[g.rng.irange(0, 3)];
+            g.stars.push_back(s);
+        }
+    }
+}
+
 void ResetRun(Game& g) {
     AudioBank* audio = g.audio;
     int hi = g.hiScore;
@@ -29,6 +49,7 @@ void ResetRun(Game& g) {
     g.rng.s = rngState ? rngState : 0x9E3779B9u;
     g.player.pos = {cfg::kCanvasW / 2.0f, cfg::kPlayerY};
     g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
+    InitStarfield(g);
     InitBunkers(g);
     StartWave(g, 1);
 }
@@ -59,7 +80,7 @@ void StartWave(Game& g, int number) {
 
     const Modifier& m = CurrentMod(g);
     if (m.id != ModifierId::None) {
-        Announce(g, TextFormat("WAVE %d: %s", number, m.name), m.tagline, cfg::kWaveCardDur);
+        Announce(g, TextFormat("WAVE %d: %s", number, m.name.data()), m.tagline, cfg::kWaveCardDur);
     } else {
         const char* quip = content::kPlainWaveSmall[g.rng.irange(0, content::kPlainWaveSmallCount - 1)];
         Announce(g, TextFormat("WAVE %d", number), number == 1 ? "They have demands." : quip,
@@ -294,20 +315,30 @@ void UpdatePlaying(Game& g, float dt) {
         FinishWave(g);
 }
 
-namespace {
-
-void DrawStars(const Game& g) {
-    for (int i = 0; i < 70; i++) {
-        unsigned h = (unsigned)i * 2654435761u;
-        float x = (float)(h % cfg::kCanvasW);
-        float y = fmodf((float)((h >> 8) % cfg::kCanvasH) + g.time * (2.0f + (h >> 16) % 6), (float)cfg::kCanvasH);
-        float tw = 0.3f + 0.7f * (0.5f + 0.5f * sinf(g.time * 2.0f + (float)i));
-        DrawPixelV({x, y}, WithAlpha({160, 170, 200, 255}, tw * 0.6f));
+void DrawBackground(const Game& g, float time) {
+    // slow-drifting nebula clouds — soft color depth that feeds the bloom
+    for (int i = 0; i < 3; i++) {
+        float px = cfg::kCanvasW * (0.22f + 0.28f * i) + sinf(time * 0.05f + i * 2.1f) * 60.0f;
+        float py = cfg::kCanvasH * (0.24f + 0.22f * i) + cosf(time * 0.04f + i * 1.3f) * 40.0f;
+        float rad = 250.0f + 60.0f * sinf(time * 0.07f + i);
+        DrawCircleGradient((int)px, (int)py, rad, WithAlpha(cfg::kColNebula[i], 0.18f),
+                           WithAlpha(cfg::kColNebula[i], 0.0f));
+    }
+    // parallax starfield (near layers scroll faster, twinkle)
+    for (const auto& s : g.stars) {
+        float y = fmodf(s.pos.y + time * s.speed, (float)cfg::kCanvasH);
+        float tw = 0.4f + 0.6f * (0.5f + 0.5f * sinf(time * 2.2f + s.phase));
+        if (s.size <= 1.0f)
+            DrawPixelV({s.pos.x, y}, WithAlpha(s.tint, tw * 0.7f));
+        else
+            DrawCircleV({s.pos.x, y}, s.size * 0.5f, WithAlpha(s.tint, tw * 0.85f));
     }
 }
 
+namespace {
+
 void DrawHud(const Game& g) {
-    DrawRectangle(0, 0, cfg::kCanvasW, (int)cfg::kHudTopH, {12, 12, 24, 255});
+    DrawRectangle(0, 0, cfg::kCanvasW, (int)cfg::kHudTopH, cfg::kColHudBar);
     DrawRectangle(0, (int)cfg::kHudTopH - 2, cfg::kCanvasW, 2, WithAlpha(cfg::kColAccent, 0.5f));
 
     GlowText(TextFormat("SCORE %06d", g.score), 16, 12, 20, cfg::kColHud);
@@ -320,8 +351,8 @@ void DrawHud(const Game& g) {
 
     const Modifier& m = CurrentMod(g);
     if (m.id != ModifierId::None) {
-        int mw = MeasureText(m.name, 15);
-        DrawText(m.name, cfg::kCanvasW / 2 - mw / 2, 38, 15, WithAlpha(cfg::kColAccent, 0.9f));
+        int mw = MeasureText(m.name.data(), 15);
+        DrawText(m.name.data(), cfg::kCanvasW / 2 - mw / 2, 38, 15, WithAlpha(cfg::kColAccent, 0.9f));
     }
 
     // lives as tiny cannons, bottom-left
@@ -349,7 +380,7 @@ void DrawHud(const Game& g) {
 
 void DrawPlaying(const Game& g) {
     ClearBackground(cfg::kColBg);
-    DrawStars(g);
+    DrawBackground(g, g.time);
 
     const Modifier& m = CurrentMod(g);
 
@@ -391,7 +422,7 @@ void DrawPlaying(const Game& g) {
         float a = 1.0f;
         if (g.player.invuln > 0) a = 0.3f + 0.7f * (0.5f + 0.5f * sinf(g.time * 24.0f));
         Color pc = m.discoHue ? HueCycle(cfg::kColPlayer, g.time) : cfg::kColPlayer;
-        DrawPlayerArt(g.player.pos, cfg::kPlayerW, cfg::kPlayerH, WithAlpha(pc, a), g.player.squash);
+        DrawPlayerArt(g.player.pos, cfg::kPlayerW, cfg::kPlayerH, WithAlpha(pc, a), g.player.squash, g.time);
         if (g.player.shieldHits > 0)
             GlowCircle(g.player.pos, cfg::kPlayerW * 0.9f,
                        WithAlpha(cfg::kColUfo, 0.10f + 0.05f * g.player.shieldHits));
@@ -402,7 +433,7 @@ void DrawPlaying(const Game& g) {
         // DEADLINE bricks carry their label
         for (const auto& s : g.shots) {
             if (s.kind == ShotKind::Brick) {
-                GlowRect({s.pos.x - 22, s.pos.y - 10, 44, 20}, {180, 60, 60, 255});
+                GlowRect({s.pos.x - 22, s.pos.y - 10, 44, 20}, cfg::kColBrick);
                 DrawText("DEADLINE", (int)s.pos.x - 20, (int)s.pos.y - 4, 8, RAYWHITE);
             }
         }
