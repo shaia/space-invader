@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Space Invaders: We Have Demands
+Comment=Self-aware parody Space Invaders — the invaders have grievances
+Exec=space_invader_plus
+Icon=space_invader_plus
+Terminal=false
+Categories=Game;ArcadeGame;
