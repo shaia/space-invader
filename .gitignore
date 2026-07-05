@@ -4,3 +4,16 @@ build/
 .cache/
 CMakeUserPresets.json
 *.user
+CLAUDE.md
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python (res/make_icon.py)
+__pycache__/
+*.pyc
+
+# JetBrains IDEs
+.idea/
