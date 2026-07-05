@@ -20,7 +20,7 @@ BossKind KindForWave(int wave) {
     return (BossKind)slot;
 }
 
-void BossSay(Game& g, const char* line) {
+void BossSay(Game& g, std::string_view line) {
     PushBubble(g, kBubbleAnchorBoss, line, 3.5f);
     PlaySfx(*g.audio, Sfx::BossRoar, 1.2f);
 }
@@ -340,7 +340,7 @@ bool BossShotHit(Game& g, const Shot& s) {
             if (sc.signHp > 0 && CheckCollisionPointRec(s.pos, signR)) {
                 sc.signHp -= dmg;
                 b.hp -= dmg;
-                SpawnDebris(g, s.pos, {230, 220, 180, 255}, 4);
+                SpawnDebris(g, s.pos, cfg::kColSign, 4);
                 PlaySfx(*g.audio, Sfx::Crunch);
                 if (sc.signHp <= 0) PushToast(g, "Sign down. Grievance pending.");
                 CheckDialogue(g);
@@ -370,7 +370,7 @@ bool BossShotHit(Game& g, const Shot& s) {
     if (CheckCollisionPointRec(s.pos, br)) {
         b.hp -= dmg;
         b.squash = 0.3f;
-        SpawnExplosion(g, s.pos, {255, 120, 120, 255}, 8);
+        SpawnExplosion(g, s.pos, cfg::kColHurt, 8);
         PlaySfx(*g.audio, Sfx::BossHit);
         CheckDialogue(g);
         if (b.hp <= 0) BossDefeated(g);
@@ -388,18 +388,18 @@ void DrawBoss(const Game& g) {
     case BossKind::Karen: {
         DrawUfoArt(b.pos, kKarenW * (1 + sq * 0.2f), kKarenH * (1 - sq * 0.2f), cfg::kColUfo, g.time);
         // the haircut (speaks for itself)
-        DrawRectangleRec({b.pos.x - 22, b.pos.y - kKarenH * 0.95f, 44, 16}, {255, 220, 150, 255});
-        DrawRectangleRec({b.pos.x - 30, b.pos.y - kKarenH * 0.75f, 18, 10}, {255, 220, 150, 255});
+        DrawRectangleRec({b.pos.x - 22, b.pos.y - kKarenH * 0.95f, 44, 16}, cfg::kColHair);
+        DrawRectangleRec({b.pos.x - 30, b.pos.y - kKarenH * 0.75f, 18, 10}, cfg::kColHair);
         // laser telegraph / beam
         if (b.phase == 1 && b.laser.active) {
             const BeamAttack& L = b.laser;
             if (L.t <= L.telegraph) {
                 float a = 0.25f + 0.5f * fmodf(L.t * 6.0f, 1.0f);
                 GlowLine({L.x, b.pos.y + kKarenH / 2}, {L.x, (float)cfg::kCanvasH}, 2,
-                         WithAlpha({255, 90, 90, 255}, a));
+                         WithAlpha(cfg::kColHurt, a));
             } else {
                 GlowLine({L.x, b.pos.y + kKarenH / 2}, {L.x, (float)cfg::kCanvasH}, L.width,
-                         {255, 90, 90, 255});
+                         cfg::kColHurt);
             }
         }
         for (const auto& m : b.minions)
@@ -417,7 +417,7 @@ void DrawBoss(const Game& g) {
             if (sc.signHp > 0) {
                 Rectangle signR = {at.x - kSignW / 2, at.y + kSaucerH / 2, kSignW, kSignH};
                 DrawRectangleRec({signR.x + 36, signR.y - 8, 4, 10}, {160, 130, 90, 255});
-                GlowRect(signR, {230, 220, 180, 255});
+                GlowRect(signR, cfg::kColSign);
                 const char* txt = i == 0 ? "FAIR\nWAGES" : (i == 1 ? "NO PIXELS\nNO PEACE" : "SCALE\nPAY");
                 DrawText(txt, (int)signR.x + 6, (int)signR.y + 6, 10, {60, 50, 40, 255});
             }
@@ -427,9 +427,9 @@ void DrawBoss(const Game& g) {
     case BossKind::Producer: {
         Rectangle br = {b.pos.x - kProdW / 2 * (1 + sq * 0.15f), b.pos.y - kProdH / 2,
                         kProdW * (1 + sq * 0.15f), kProdH};
-        GlowRect(br, {90, 90, 110, 255});
+        GlowRect(br, cfg::kColProducer);
         Rectangle screen = {br.x + 14, br.y + 12, br.width - 28, br.height - 44};
-        DrawRectangleRec(screen, {20, 24, 40, 255});
+        DrawRectangleRec(screen, cfg::kColProducerScreen);
         // the burndown chart burns up
         float t = fmodf(g.time * 0.25f, 1.0f);
         for (int i = 0; i < 6; i++) {
@@ -437,21 +437,21 @@ void DrawBoss(const Game& g) {
             float hpx = 10 + (i * 12 + t * 30);
             if (hpx > screen.height - 12) hpx = screen.height - 12;
             DrawRectangleRec({x0, screen.y + screen.height - 6 - hpx,
-                              (screen.width - 16) / 7.0f, hpx}, {255, 90, 90, 255});
+                              (screen.width - 16) / 7.0f, hpx}, cfg::kColHurt);
         }
         DrawText("Q3 BURNDOWN", (int)screen.x + 8, (int)screen.y + 4, 10, {150, 160, 180, 255});
-        DrawRectangleRec({b.pos.x - 20, br.y + br.height, 40, 18}, {90, 90, 110, 255});
+        DrawRectangleRec({b.pos.x - 20, br.y + br.height, 40, 18}, cfg::kColProducer);
         // scope-creep beam
         if (b.creep.active) {
             const BeamAttack& c = b.creep;
             if (c.t <= c.telegraph) {
                 float a = 0.25f + 0.5f * fmodf(c.t * 5.0f, 1.0f);
                 GlowLine({c.x, b.pos.y + kProdH / 2}, {c.x, (float)cfg::kCanvasH}, 2,
-                         WithAlpha({255, 170, 90, 255}, a));
-                DrawText("SCOPE", (int)c.x - 18, (int)(b.pos.y + kProdH / 2 + 8), 12, {255, 170, 90, 255});
+                         WithAlpha(cfg::kColScopeCreep, a));
+                DrawText("SCOPE", (int)c.x - 18, (int)(b.pos.y + kProdH / 2 + 8), 12, cfg::kColScopeCreep);
             } else {
                 GlowLine({c.x, b.pos.y + kProdH / 2}, {c.x, (float)cfg::kCanvasH}, c.width,
-                         WithAlpha({255, 170, 90, 255}, 0.85f));
+                         WithAlpha(cfg::kColScopeCreep, 0.85f));
             }
         }
         break;
@@ -464,7 +464,7 @@ void DrawBoss(const Game& g) {
     float bw = 380, bx = (cfg::kCanvasW - bw) / 2, by = cfg::kHudTopH + 8;
     DrawRectangleRec({bx - 2, by - 2, bw + 4, 14}, {30, 30, 46, 255});
     DrawRectangleRec({bx, by, bw * frac, 10},
-                     frac > 0.5f ? cfg::kColAccent : Color{255, 90, 90, 255});
+                     frac > 0.5f ? cfg::kColAccent : cfg::kColHurt);
     const char* name = b.kind == BossKind::Karen ? "MOTHERSHIP KAREN"
                      : b.kind == BossKind::Local1978 ? "UFO LOCAL 1978" : "THE PRODUCER";
     int w = MeasureText(name, 14);

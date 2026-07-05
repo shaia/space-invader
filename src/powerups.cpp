@@ -6,9 +6,9 @@
 namespace {
 struct PickupDef {
     PowerKind kind;
-    const char* glyph;
+    std::string_view glyph;
     Color color;
-    const char* toast;
+    std::string_view toast;
 };
 
 const PickupDef kDefs[(int)PowerKind::COUNT] = {
@@ -124,8 +124,8 @@ void DrawPickups(const Game& g) {
         float s = cfg::kPickupSize;
         GlowRectRot({at.x - s / 2, at.y - s / 2, s, s}, p.wobble * 40.0f, WithAlpha(d.color, 0.35f));
         GlowCircle(at, s * 0.42f, WithAlpha(d.color, 0.9f));
-        int w = MeasureText(d.glyph, 20);
-        DrawText(d.glyph, (int)at.x - w / 2, (int)at.y - 10, 20, cfg::kColBg);
+        int w = MeasureText(d.glyph.data(), 20);
+        DrawText(d.glyph.data(), (int)at.x - w / 2, (int)at.y - 10, 20, cfg::kColBg);
     }
 }
 
@@ -137,7 +137,7 @@ void DrawEffectHud(const Game& g) {
         const PickupDef& d = Def(k);
         DrawRectangleRec({x, y, 34, 22}, WithAlpha(d.color, 0.25f));
         DrawRectangleLinesEx({x, y, 34, 22}, 1, d.color);
-        DrawText(d.glyph, (int)x + 4, (int)y + 3, 16, d.color);
+        DrawText(d.glyph.data(), (int)x + 4, (int)y + 3, 16, d.color);
         if (timed)
             DrawText(TextFormat("%.0f", remain), (int)x + 18, (int)y + 5, 12, cfg::kColHud);
         x += 40;
