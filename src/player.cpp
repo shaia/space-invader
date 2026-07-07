@@ -17,6 +17,7 @@ void PlayerFire(Game& g) {
 
     if (g.fx.bigShotArmed) {
         g.fx.bigShotArmed = false;
+        g.stats.shotsFired++;
         Shot s;
         s.pos = muzzle;
         s.vel = {0, -140.0f};
@@ -27,6 +28,7 @@ void PlayerFire(Game& g) {
         PlaySfx(*g.audio, Sfx::BigShot);
     } else {
         int n = g.fx.spread > 0 ? 3 : 1;
+        g.stats.shotsFired += n;
         for (int i = 0; i < n; i++) {
             float ang = (i - (n - 1) / 2.0f) * 0.16f;
             Shot s;
@@ -113,14 +115,8 @@ void HitPlayer(Game& g, std::string_view cause) {
 
     if (g.lives > 0) {
         // a random survivor comments on the situation
-        int tries = 20;
-        while (tries-- > 0) {
-            int idx = g.rng.irange(0, cfg::kGridCount - 1);
-            if (g.invaders[idx].alive) {
-                PushBubble(g, idx, content::kPlayerDown, 2.5f);
-                break;
-            }
-        }
+        int idx = RandomAliveInvader(g);
+        if (idx >= 0) PushBubble(g, idx, content::kPlayerDown, 2.5f);
     } else {
         g.gameOver = true;
     }

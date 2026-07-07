@@ -60,6 +60,7 @@ void ActivatePickup(Game& g, PowerKind kind) {
     PlaySfx(*g.audio, Sfx::Pickup);
     PushToast(g, Def(kind).toast);
     SpawnExplosion(g, g.player.pos, Def(kind).color, 14);
+    g.stats.powerups++;
 
     switch (kind) {
     case PowerKind::Spread: g.fx.spread = cfg::kFxSpread; break;
@@ -67,14 +68,8 @@ void ActivatePickup(Game& g, PowerKind kind) {
     case PowerKind::Rapid:  g.fx.rapid = cfg::kFxRapid; break;
     case PowerKind::Freeze: {
         g.fx.freeze = cfg::kFxFreeze;
-        // one invader announces the break
-        for (int tries = 0; tries < 20; tries++) {
-            int idx = g.rng.irange(0, cfg::kGridCount - 1);
-            if (g.invaders[idx].alive) {
-                PushBubble(g, idx, content::kFreezeBreak, cfg::kFxFreeze);
-                break;
-            }
-        }
+        int idx = RandomAliveInvader(g);  // one invader announces the break
+        if (idx >= 0) PushBubble(g, idx, content::kFreezeBreak, cfg::kFxFreeze);
         break;
     }
     case PowerKind::Shield: g.player.shieldHits = cfg::kShieldHits; break;
