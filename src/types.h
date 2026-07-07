@@ -88,6 +88,17 @@ struct Ufo {
     float spawnTimer = 12.0f;
 };
 
+// an invader that refused to explode; tumbles down as a hazard, quipping
+struct FallingInvader {
+    Vector2 pos{};
+    Vector2 vel{};
+    float angle = 0.0f;   // degrees
+    float spin = 0.0f;    // deg/s, signed
+    int row = 0;          // art mask + kColRow color
+    int seed = 0;         // original grid index, keeps DrawInvaderArt deterministic
+    uint32_t id = 0;      // stable handle for the bubble anchor (indices shift on erase)
+};
+
 // ---- wave modifiers ----
 enum class ModifierId : uint8_t {
     None, OppositeDay, BudgetCuts, PassiveAggression, DiscoInferno,
@@ -201,6 +212,7 @@ struct Bubble {
 inline constexpr int kBubbleAnchorFixed = -1;
 inline constexpr int kBubbleAnchorBoss  = -2;
 inline constexpr int kBubbleAnchorUfo   = -3;
+inline constexpr int kBubbleAnchorFallerBase = -16;  // anchor = base - (int)faller.id
 
 struct Toast {
     std::string text;

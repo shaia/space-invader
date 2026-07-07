@@ -39,6 +39,12 @@ bool AnchorPos(const Game& g, const Bubble& bb, Vector2& out) {
         out = g.ufo.pos;
         return true;
     }
+    if (bb.anchor <= kBubbleAnchorFallerBase) {
+        uint32_t id = (uint32_t)(kBubbleAnchorFallerBase - bb.anchor);
+        for (const auto& f : g.fallers)
+            if (f.id == id) { out = f.pos; return true; }
+        return false;
+    }
     out = bb.pos;
     return true;
 }
@@ -83,6 +89,11 @@ void UpdateUiFx(Game& g, float dt) {
         b.t += dt;
         Vector2 p;
         if (!AnchorPos(g, b, p) && b.anchor != kBubbleAnchorFixed) {
+            // a faller exited via the floor, mid-quip; let the line die with dignity
+            if (b.anchor <= kBubbleAnchorFallerBase) {
+                b.t = b.dur;
+                continue;
+            }
             // the speaker was shot mid-sentence; re-anchor at the grid center
             b.pos = GridCenter(g);
             b.anchor = kBubbleAnchorFixed;

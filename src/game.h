@@ -19,6 +19,8 @@ struct Game {
     std::vector<Shot> shots;     // player + enemy, flag disambiguates
     std::array<Bunker, cfg::kBunkerCount> bunkers{};
     std::vector<PowerUp> pickups;
+    std::vector<FallingInvader> fallers;
+    uint32_t fallerIdNext = 1;
     ActiveEffects fx{};
     Ufo ufo{};
     Boss boss{};
@@ -61,6 +63,8 @@ void UpdateUfo(Game& g, float dt);
 Rectangle InvaderRect(const Game& g, int idx);
 float GridScale(const Game& g);   // Tiny Wave
 void KillInvader(Game& g, int idx);
+void SpawnFaller(Game& g, int idx);
+void UpdateFallers(Game& g, float dt);
 
 // ---- player.cpp ----
 void UpdatePlayer(Game& g, float dt);

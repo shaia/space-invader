@@ -1,6 +1,7 @@
 #include "content.h"
 #include "game.h"
 #include "render.h"
+#include "rlgl.h"
 #include <cmath>
 
 const Modifier& CurrentMod(const Game& g) { return GetModifier(g.wave.modifier); }
@@ -65,6 +66,7 @@ void StartWave(Game& g, int number) {
 
     // enemy leftovers don't carry across waves
     std::erase_if(g.shots, [](const Shot& s) { return !s.fromPlayer; });
+    g.fallers.clear();
 
     if (g.wave.bossWave) {
         for (auto& v : g.invaders) v.alive = false;
@@ -304,6 +306,7 @@ void UpdatePlaying(Game& g, float dt) {
     if (!g.player.alive) return;  // death freeze: the world respectfully pauses
 
     UpdateInvaders(g, dt);
+    UpdateFallers(g, dt);
     UpdateUfo(g, dt);
     UpdateBoss(g, dt);
     UpdateShots(g, dt);
@@ -402,6 +405,18 @@ void DrawPlaying(const Game& g) {
         float s = GridScale(g);
         DrawInvaderArt(v.pos, cfg::kInvaderW * s, cfg::kInvaderH * s, row, g.marchFrame,
                        v.squash, WithAlpha(tint, alpha), m.wobbly, g.time, i);
+    }
+
+    // fallers: tumbling refuseniks, fast frame flip = flailing limbs
+    for (const auto& f : g.fallers) {
+        Color tint = m.discoHue ? HueCycle(cfg::kColRow[f.row], g.time) : cfg::kColRow[f.row];
+        rlPushMatrix();
+        rlTranslatef(f.pos.x, f.pos.y, 0);
+        rlRotatef(f.angle, 0, 0, 1);
+        rlTranslatef(-f.pos.x, -f.pos.y, 0);
+        DrawInvaderArt(f.pos, cfg::kInvaderW, cfg::kInvaderH, f.row,
+                       ((int)(g.time * 8.0f)) & 1, 0.0f, tint, false, g.time, f.seed);
+        rlPopMatrix();
     }
 
     if (g.ufo.active)

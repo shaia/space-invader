@@ -166,11 +166,16 @@ void KillInvader(Game& g, int idx) {
     AddScore(g, pts);
 
     Color c = cfg::kColRow[row];
-    SpawnExplosion(g, v.pos, c, 16);
-    SpawnDebris(g, v.pos, c, 5);
     SpawnScorePop(g, {v.pos.x, v.pos.y - cfg::kInvaderH}, pts, c);
-    float pitch = GridScale(g) < 1.0f ? 1.7f : g.rng.range(0.9f, 1.1f);
-    PlaySfx(*g.audio, Sfx::Pop, pitch);
+    if (g.rng.chance(cfg::kFallChance)) {
+        SpawnFaller(g, idx);
+        PlaySfx(*g.audio, Sfx::Scream, g.rng.range(0.9f, 1.1f));
+    } else {
+        SpawnExplosion(g, v.pos, c, 16);
+        SpawnDebris(g, v.pos, c, 5);
+        float pitch = GridScale(g) < 1.0f ? 1.7f : g.rng.range(0.9f, 1.1f);
+        PlaySfx(*g.audio, Sfx::Pop, pitch);
+    }
     g.shake = fmaxf(g.shake, 2.0f);
 
     MaybeDropPickup(g, v.pos);
@@ -183,6 +188,46 @@ void KillInvader(Game& g, int idx) {
         for (int i = 0; i < cfg::kGridCount; i++)
             if (g.invaders[i].alive) { PushBubble(g, i, content::kOneLeft, 4.0f); break; }
     }
+}
+
+void SpawnFaller(Game& g, int idx) {
+    const Invader& v = g.invaders[idx];
+    FallingInvader f;
+    f.pos = v.pos;
+    f.vel = {g.rng.range(-cfg::kFallDriftX, cfg::kFallDriftX), cfg::kFallInitVy};
+    f.spin = (g.rng.chance(0.5f) ? 1.0f : -1.0f) * g.rng.range(cfg::kFallSpinMin, cfg::kFallSpinMax);
+    f.row = idx / cfg::kGridCols;
+    f.seed = idx;
+    f.id = g.fallerIdNext++;
+    g.fallers.push_back(f);
+    PushBubble(g, kBubbleAnchorFallerBase - (int)f.id,
+               content::kFallerQuips[g.rng.irange(0, content::kFallerQuipCount - 1)],
+               cfg::kFallQuipDur);
+}
+
+void UpdateFallers(Game& g, float dt) {
+    for (auto& f : g.fallers) {
+        f.vel.y += cfg::kFallGravity * dt;
+        f.pos.x += f.vel.x * dt;
+        f.pos.y += f.vel.y * dt;
+        f.angle += f.spin * dt;
+        if (g.rng.chance(0.3f)) SpawnTrail(g, f.pos, cfg::kColRow[f.row]);
+
+        // chips bunkers like a bomb while passing through the bunker band
+        if (f.pos.y + cfg::kInvaderH / 2 > cfg::kBunkerY - 4 &&
+            f.pos.y - cfg::kInvaderH / 2 < cfg::kBunkerY + cfg::kBunkerRows * cfg::kBunkerCell + 4)
+            if (CarveBunkers(g, f.pos, cfg::kCarveBomb))
+                PlaySfx(*g.audio, Sfx::Crunch);
+
+        Rectangle fr = {f.pos.x - cfg::kInvaderW / 2, f.pos.y - cfg::kInvaderH / 2,
+                        cfg::kInvaderW, cfg::kInvaderH};
+        if (g.player.alive && CheckCollisionRecs(fr, PlayerRect(g))) {
+            HitPlayer(g, "falling coworker");
+            SpawnExplosion(g, f.pos, cfg::kColRow[f.row], 16);
+            f.pos.y = cfg::kCanvasH + 100;
+        }
+    }
+    std::erase_if(g.fallers, [](const FallingInvader& f) { return f.pos.y > cfg::kCanvasH + 40; });
 }
 
 void UpdateUfo(Game& g, float dt) {
