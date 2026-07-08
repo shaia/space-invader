@@ -46,6 +46,15 @@ inline constexpr const char* kFallerQuips[] = {
 };
 inline constexpr int kFallerQuipCount = (int)(sizeof(kFallerQuips) / sizeof(kFallerQuips[0]));
 
+// ---- last-invader panic ----
+inline constexpr const char* kPanicLines[] = {
+    "I'm calling my union rep.",
+    "The panic button is\ndecorative. Pressing it anyway.",
+    "Requesting backup.\nDenied. Requesting again.",
+    "I've seen the severance terms.\nKeep your distance.",
+};
+inline constexpr int kPanicLineCount = (int)(sizeof(kPanicLines) / sizeof(kPanicLines[0]));
+
 // ---- UFO flyby lines ----
 inline constexpr const char* kUfoLines[] = {
     "Scale pay for cameo\nappearances. Calling my agent.",

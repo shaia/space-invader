@@ -62,6 +62,15 @@ inline constexpr float kFallSpinMin = 140.0f;  // tumble deg/s
 inline constexpr float kFallSpinMax = 360.0f;
 inline constexpr float kFallQuipDur = 2.6f;
 
+// ---- last-invader panic ----
+inline constexpr float kPanicSpeedMult  = 0.7f;   // march interval x this (faster) when 1 left
+inline constexpr float kPanicBombMult   = 2.5f;   // desperate bomb rate x this
+inline constexpr float kPanicPitch      = 1.5f;   // march-note pitch x this
+inline constexpr float kPanicBubbleMin  = 3.5f;   // panic quip cadence
+inline constexpr float kPanicBubbleMax  = 6.0f;
+inline constexpr float kPanicVignetteA  = 0.12f;  // red edge-glow peak alpha
+inline constexpr float kPanicAchSecs    = 10.0f;  // survive-the-panic achievement threshold
+
 // ---- UFO ----
 inline constexpr float kUfoY        = 92.0f;
 inline constexpr float kUfoSpeed    = 130.0f;

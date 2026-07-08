@@ -50,7 +50,9 @@ float StepInterval(const Game& g) {
     if (t < 0) t = 0;
     float base = cfg::kMarchFastest + t * (cfg::kMarchSlowest - cfg::kMarchFastest);
     float waveScale = powf(cfg::kWaveSpeedMult, (float)(g.wave.number - 1));
-    return base / waveScale;
+    float interval = base / waveScale;
+    if (g.aliveCount == 1) interval *= cfg::kPanicSpeedMult;  // the last one double-times
+    return interval;
 }
 
 void MarchStep(Game& g) {
@@ -85,6 +87,7 @@ void MarchStep(Game& g) {
         if (v.alive) v.squash = m.discoHue ? 0.45f : 0.18f;
 
     float pitch = m.scale < 1.0f ? 1.7f : 1.0f;
+    if (g.aliveCount == 1) pitch *= cfg::kPanicPitch;  // the last one's heartbeat races
     PlaySfx(*g.audio, (Sfx)((int)Sfx::March0 + g.marchNoteIdx), pitch);
     g.marchNoteIdx = (g.marchNoteIdx + 1) % 4;
 
@@ -138,6 +141,7 @@ void UpdateInvaders(Game& g, float dt) {
         if (v.squash > 0) v.squash = fmaxf(0.0f, v.squash - dt * 3.0f);
         if (v.hitFlash > 0) v.hitFlash -= dt;
     }
+    g.panicTimer = (g.aliveCount == 1) ? g.panicTimer + dt : 0.0f;
     if (g.aliveCount == 0 || g.fx.freeze > 0) return;
 
     g.marchTimer += dt;
@@ -149,6 +153,7 @@ void UpdateInvaders(Game& g, float dt) {
     }
 
     float rate = cfg::kBombBaseRate * (1.0f + cfg::kBombRateWave * (float)(g.wave.number - 1));
+    if (g.aliveCount == 1) rate *= cfg::kPanicBombMult;  // panic fire
     g.bombTimer += dt;
     float gap = 1.0f / rate;
     if (g.bombTimer >= gap) {
@@ -190,6 +195,13 @@ void KillInvader(Game& g, int idx) {
     if (g.aliveCount == 1) {
         for (int i = 0; i < cfg::kGridCount; i++)
             if (g.invaders[i].alive) { PushBubble(g, i, content::kOneLeft, 4.0f); break; }
+    }
+    // downing the last one earns a little extra fanfare
+    if (g.aliveCount == 0 && !g.wave.bossWave) {
+        SpawnConfetti(g, v.pos, 40);
+        SpawnShockwave(g, v.pos, cfg::kColPlayer, 20.0f);
+        g.shake = fmaxf(g.shake, 6.0f);
+        g.hitStop = fmaxf(g.hitStop, cfg::kHitStopBossPhase);
     }
 }
 

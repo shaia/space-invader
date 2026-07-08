@@ -552,6 +552,20 @@ void DrawPlaying(const Game& g) {
 
     DrawParticles(g);
     DrawUiFx(g);
+
+    // last-invader panic: a pulsing red edge vignette (drawn here, not in postfx,
+    // so it survives even if the shaders fail to compile)
+    if (g.aliveCount == 1 && !g.wave.bossWave) {
+        float pa = cfg::kPanicVignetteA * (0.6f + 0.4f * sinf(g.time * 3.0f));
+        Color edge = WithAlpha(cfg::kColHurt, pa);
+        Color clear = WithAlpha(cfg::kColHurt, 0.0f);
+        int w = 90;
+        DrawRectangleGradientH(0, 0, w, cfg::kCanvasH, edge, clear);
+        DrawRectangleGradientH(cfg::kCanvasW - w, 0, w, cfg::kCanvasH, clear, edge);
+        DrawRectangleGradientV(0, 0, cfg::kCanvasW, w, edge, clear);
+        DrawRectangleGradientV(0, cfg::kCanvasH - w, cfg::kCanvasW, w, clear, edge);
+    }
+
     DrawHud(g);
     DrawEffectHud(g);
 }
