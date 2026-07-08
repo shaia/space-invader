@@ -23,7 +23,7 @@ struct Rng {
 };
 
 // ---- screens ----
-enum class Screen { Title, Playing, Paused, GameOver, HighScoreEntry, Quit };
+enum class Screen { Title, Playing, Paused, GameOver, PerformanceReview, HighScoreEntry, Quit };
 
 // ---- bubble anchor sentinels ----
 // Shared: enemy shots record who fired them (for the exit interview), so these

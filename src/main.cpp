@@ -85,6 +85,9 @@ int main() {
         case Screen::GameOver:
             next = UpdateDrawGameOver(g, hs, screenTimer, dt);
             break;
+        case Screen::PerformanceReview:
+            next = UpdateDrawPerformanceReview(g, hs, screenTimer, dt);
+            break;
         case Screen::HighScoreEntry:
             next = UpdateDrawHighScoreEntry(g, hs, entry, screenTimer);
             break;
@@ -108,7 +111,8 @@ int main() {
         float fit = std::min(winW / (float)cfg::kCanvasW, winH / (float)cfg::kCanvasH);
         float dstW = cfg::kCanvasW * fit, dstH = cfg::kCanvasH * fit;
         Vector2 shake = {0, 0};
-        if (g.shake > 0.01f && (screen == Screen::Playing || screen == Screen::GameOver)) {
+        if (g.shake > 0.01f && (screen == Screen::Playing || screen == Screen::GameOver ||
+                                screen == Screen::PerformanceReview)) {
             shake.x = g.rng.range(-g.shake, g.shake) * fit;
             shake.y = g.rng.range(-g.shake, g.shake) * fit;
         }
@@ -118,7 +122,8 @@ int main() {
         if (postfx.enabled) RenderBloom(postfx, canvas.texture);
 
         // speech bubbles draw AFTER the bright-pass: their white panels must not bloom
-        if (screen == Screen::Playing || screen == Screen::Paused || screen == Screen::GameOver) {
+        if (screen == Screen::Playing || screen == Screen::Paused || screen == Screen::GameOver ||
+            screen == Screen::PerformanceReview) {
             BeginTextureMode(canvas);
             BeginMode2D(ssCam);
             DrawSpeechBubbles(g);

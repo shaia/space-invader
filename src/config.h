@@ -134,6 +134,23 @@ inline constexpr int kPtsMinion     = 25;
 inline constexpr int kWaveBonusPer  = 100;  // x wave number
 inline constexpr int kBossBonusPer  = 500;  // x wave number
 
+// ---- Performance Review grade (weights sum to 100) ----
+inline constexpr float kGradeWAccuracy   = 25.0f;
+inline constexpr float kGradeWWaves      = 30.0f;
+inline constexpr int   kGradeWavesFull   = 12;
+inline constexpr float kGradeWBosses     = 10.0f;
+inline constexpr int   kGradeBossesFull  = 3;
+inline constexpr float kGradeWChain      = 15.0f;
+inline constexpr int   kGradeChainFull   = 20;
+inline constexpr float kGradeWGrazes     = 10.0f;
+inline constexpr int   kGradeGrazesFull  = 20;
+inline constexpr float kGradeWBunkers    = 5.0f;   // scaled down by bunkers lost
+inline constexpr int   kGradeBunkersFull = 8;
+inline constexpr float kGradeWPowerups   = 5.0f;
+inline constexpr int   kGradePowerupsFull = 10;
+// letter thresholds on the 0..100 score: F D C B A S
+inline constexpr int   kGradeS = 88, kGradeA = 72, kGradeB = 56, kGradeC = 40, kGradeD = 25;
+
 // ---- waves / bosses / modifiers ----
 inline constexpr int   kFirstModifierWave = 3;
 inline constexpr int   kBossEvery         = 5;
