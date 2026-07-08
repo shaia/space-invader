@@ -234,6 +234,7 @@ struct Particle {
     Color color = WHITE;
     ParticleKind kind = ParticleKind::Spark;
     int value = 0;   // ScorePop: the number to draw
+    std::string_view label{};  // ScorePop: optional suffix, e.g. "HAZARD PAY" (view into a static)
 };
 
 // ---- ui fx ----

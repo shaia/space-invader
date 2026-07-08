@@ -70,6 +70,9 @@ inline constexpr const char* kComboTierLines[3] = {
 };
 inline constexpr const char* kComboReset = "Multiplier reset. HR incident filed.";
 
+// ---- graze (Hazard Pay) ----
+inline constexpr const char* kHazardPay = "HAZARD PAY";
+
 // ---- power-up toasts ----
 inline constexpr const char* kToastSpread   = "SPREAD THE WORD - now in surround sound.";
 inline constexpr const char* kToastPierce   = "PIERCING COMMENTARY - it cuts deep.";
