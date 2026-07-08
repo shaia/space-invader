@@ -34,9 +34,11 @@ void CheckDialogue(Game& g) {
     case BossKind::Local1978: l75 = content::kLocal75; l50 = content::kLocal50; l25 = content::kLocal25; break;
     case BossKind::Producer:  l75 = content::kProd75;  l50 = content::kProd50;  l25 = content::kProd25;  break;
     }
-    if (f <= 0.75f && !b.saidAt75) { b.saidAt75 = true; BossSay(g, l75); }
-    if (f <= 0.50f && !b.saidAt50) { b.saidAt50 = true; BossSay(g, l50); }
-    if (f <= 0.25f && !b.saidAt25) { b.saidAt25 = true; BossSay(g, l25); }
+    bool crossed = false;
+    if (f <= 0.75f && !b.saidAt75) { b.saidAt75 = true; BossSay(g, l75); crossed = true; }
+    if (f <= 0.50f && !b.saidAt50) { b.saidAt50 = true; BossSay(g, l50); crossed = true; }
+    if (f <= 0.25f && !b.saidAt25) { b.saidAt25 = true; BossSay(g, l25); crossed = true; }
+    if (crossed) g.hitStop = fmaxf(g.hitStop, cfg::kHitStopBossPhase);
 }
 
 void BossDefeated(Game& g) {
@@ -47,6 +49,7 @@ void BossDefeated(Game& g) {
     SpawnConfetti(g, b.pos, 120);
     SpawnExplosion(g, b.pos, cfg::kColUfo, 60);
     g.shake = 14.0f;
+    g.hitStop = fmaxf(g.hitStop, cfg::kHitStopBossKill);
     PlaySfx(*g.audio, Sfx::BossRoar, 0.7f);
 
     const char* death = content::kKarenDeath;
