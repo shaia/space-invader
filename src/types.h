@@ -266,5 +266,7 @@ struct UiFx {
     std::vector<Toast> toasts;
     Announcement card{};
     float ambientTimer = 10.0f;
-    uint32_t achAwarded = 0;      // this run
+    uint32_t achAwarded = 0;         // this run
+    float reactiveCooldown = 20.0f;  // gap before/between reactive commentary
+    uint32_t reactiveSaid = 0;       // once-per-run reactive flags
 };

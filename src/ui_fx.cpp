@@ -8,6 +8,9 @@ constexpr float kToastDur = 3.2f;
 constexpr int kBubbleFont = 16;
 constexpr int kToastFont = 16;
 
+// once-per-run reactive commentary flags (UiFx::reactiveSaid bits)
+enum ReactBit { kReactLastLife = 0, kReactNearHi = 1, kReactPacifist = 2 };
+
 Vector2 GridCenter(const Game& g) {
     Vector2 sum{0, 0};
     int n = 0;
@@ -130,6 +133,47 @@ void UpdateUiFx(Game& g, float dt) {
             if (idx >= 0)
                 PushBubble(g, idx,
                            content::kPanicLines[g.rng.irange(0, content::kPanicLineCount - 1)], 3.0f);
+        }
+    }
+
+    // reactive commentary: the invaders remark on how you're actually playing
+    if (g.uifx.reactiveCooldown > 0) g.uifx.reactiveCooldown -= dt;
+    if (g.uifx.bubbles.empty() && g.uifx.reactiveCooldown <= 0 && !g.wave.clearing &&
+        g.aliveCount > 0 && !g.wave.bossWave && g.player.alive) {
+        auto once = [&](int bit) {
+            uint32_t m = 1u << bit;
+            if (g.uifx.reactiveSaid & m) return false;
+            g.uifx.reactiveSaid |= m;
+            return true;
+        };
+        auto pick = [&](const char* const* pool, int n) { return pool[g.rng.irange(0, n - 1)]; };
+
+        const char* line = nullptr;
+        float acc = g.stats.shotsFired > 0 ? (float)g.stats.shotsHit / (float)g.stats.shotsFired : 1.0f;
+        if (g.comboBroken) {  // consume the flag from HitPlayer
+            g.comboBroken = false;
+            line = pick(content::kReactiveComboLost, content::kReactiveComboLostCount);
+        } else if (g.lives == 1 && once(kReactLastLife)) {
+            line = pick(content::kReactiveLastLife, content::kReactiveLastLifeCount);
+        } else if (g.score < g.hiScore && g.hiScore - g.score <= cfg::kNearHiScoreMargin &&
+                   once(kReactNearHi)) {
+            line = pick(content::kReactiveNearHi, content::kReactiveNearHiCount);
+        } else if (g.stats.shotsFired >= cfg::kLowAccuracyShots && acc < cfg::kLowAccuracy) {
+            line = pick(content::kReactiveAccuracy, content::kReactiveAccuracyCount);
+        } else if (g.edgeDwell >= cfg::kEdgeDwellSecs) {
+            g.edgeDwell = 0.0f;
+            line = pick(content::kReactiveCorner, content::kReactiveCornerCount);
+        } else if (g.lastShotAt > 0 && g.time - g.lastShotAt >= cfg::kPacifistStretch &&
+                   once(kReactPacifist)) {
+            line = pick(content::kReactivePacifist, content::kReactivePacifistCount);
+        }
+
+        if (line) {
+            int idx = RandomAliveInvader(g);
+            if (idx >= 0) {
+                PushBubble(g, idx, line, 3.5f);
+                g.uifx.reactiveCooldown = cfg::kReactiveCooldown;
+            }
         }
     }
 }
