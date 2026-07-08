@@ -111,12 +111,14 @@ void DropBomb(Game& g) {
         }
     }
     if (nCols == 0) return;
-    const Invader& shooter = g.invaders[cols[g.rng.irange(0, nCols - 1)]];
+    int shooterIdx = cols[g.rng.irange(0, nCols - 1)];
+    const Invader& shooter = g.invaders[shooterIdx];
 
     const Modifier& m = CurrentMod(g);
     Shot s;
     s.pos = {shooter.pos.x, shooter.pos.y + cfg::kInvaderH / 2};
     s.fromPlayer = false;
+    s.owner = shooterIdx;  // for the exit interview if this bomb lands the kill
     if (m.complimentBombs) {
         s.kind = ShotKind::Compliment;
         s.vel = {0, cfg::kBombSpeed * 0.8f};
@@ -223,7 +225,7 @@ void UpdateFallers(Game& g, float dt) {
         Rectangle fr = {f.pos.x - cfg::kInvaderW / 2, f.pos.y - cfg::kInvaderH / 2,
                         cfg::kInvaderW, cfg::kInvaderH};
         if (g.player.alive && CheckCollisionRecs(fr, PlayerRect(g))) {
-            HitPlayer(g, "falling coworker");
+            HitPlayer(g, "falling coworker", kBubbleAnchorFallerBase - (int)f.id);
             SpawnExplosion(g, f.pos, cfg::kColRow[f.row], 16);
             f.pos.y = cfg::kCanvasH + 100;
         }

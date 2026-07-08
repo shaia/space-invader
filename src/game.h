@@ -74,7 +74,7 @@ void UpdateFallers(Game& g, float dt);
 
 // ---- player.cpp ----
 void UpdatePlayer(Game& g, float dt);
-void HitPlayer(Game& g, std::string_view cause);
+void HitPlayer(Game& g, std::string_view cause, int anchor = kBubbleAnchorFixed);
 void PlayerFire(Game& g);
 
 // ---- bunkers.cpp ----

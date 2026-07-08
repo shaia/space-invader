@@ -73,6 +73,17 @@ inline constexpr const char* kComboReset = "Multiplier reset. HR incident filed.
 // ---- graze (Hazard Pay) ----
 inline constexpr const char* kHazardPay = "HAZARD PAY";
 
+// ---- exit interview (spoken by whoever downs the cannon) ----
+inline constexpr const char* kExitInterview[] = {
+    "Nothing personal.\nIt was policy.",
+    "Per my last projectile.",
+    "This will be reflected\nin your file.",
+    "We value your feedback.",
+    "Escalated. Resolved.",
+    "Exit interview waived.",
+};
+inline constexpr int kExitInterviewCount = (int)(sizeof(kExitInterview) / sizeof(kExitInterview[0]));
+
 // ---- power-up toasts ----
 inline constexpr const char* kToastSpread   = "SPREAD THE WORD - now in surround sound.";
 inline constexpr const char* kToastPierce   = "PIERCING COMMENTARY - it cuts deep.";

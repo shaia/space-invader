@@ -89,7 +89,7 @@ void UpdatePlayer(Game& g, float dt) {
     if (IsKeyDown(KEY_SPACE)) PlayerFire(g);
 }
 
-void HitPlayer(Game& g, std::string_view cause) {
+void HitPlayer(Game& g, std::string_view cause, int anchor) {
     Player& p = g.player;
     if (!p.alive || p.invuln > 0) return;
 
@@ -120,10 +120,19 @@ void HitPlayer(Game& g, std::string_view cause) {
     SpawnDebris(g, p.pos, cfg::kColPlayer, 14);
     PlaySfx(*g.audio, Sfx::PlayerDie);
 
+    g.stats.incidents++;
     if (g.lives > 0) {
-        // a random survivor comments on the situation
-        int idx = RandomAliveInvader(g);
-        if (idx >= 0) PushBubble(g, idx, content::kPlayerDown, 2.5f);
+        // the killer files an exit interview during the death freeze; if there's no
+        // identifiable killer (debug, mirror cannon) a survivor just shrugs
+        if (anchor != kBubbleAnchorFixed) {
+            PushBubble(g, anchor,
+                       content::kExitInterview[g.rng.irange(0, content::kExitInterviewCount - 1)],
+                       2.4f);
+        } else {
+            int idx = RandomAliveInvader(g);
+            if (idx >= 0) PushBubble(g, idx, content::kPlayerDown, 2.5f);
+        }
+        PushToast(g, TextFormat("INCIDENT REPORT #%d FILED", g.stats.incidents));
     } else {
         g.gameOver = true;
     }

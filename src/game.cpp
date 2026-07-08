@@ -320,7 +320,7 @@ void ResolveCollisions(Game& g) {
         }
 
         if (g.player.alive && CheckCollisionRecs(ShotRect(s), PlayerRect(g))) {
-            HitPlayer(g, s.kind == ShotKind::Compliment ? "compliment" : "projectile");
+            HitPlayer(g, s.kind == ShotKind::Compliment ? "compliment" : "projectile", s.owner);
             s.pos.y = cfg::kCanvasH + 100;
         }
 
@@ -340,10 +340,10 @@ void ResolveCollisions(Game& g) {
             v.pos.y - cfg::kInvaderH / 2 < cfg::kBunkerY + cfg::kBunkerRows * cfg::kBunkerCell + 4)
             CarveBunkers(g, v.pos, cfg::kInvaderW * 0.55f);
         if (g.player.alive && CheckCollisionRecs(InvaderRect(g, i), PlayerRect(g)))
-            HitPlayer(g, "invader");
+            HitPlayer(g, "invader", i);
     }
 
-    if (BossTouchesPlayer(g)) HitPlayer(g, "management");
+    if (BossTouchesPlayer(g)) HitPlayer(g, "management", kBubbleAnchorBoss);
 }
 
 void UpdatePlaying(Game& g, float dt) {
