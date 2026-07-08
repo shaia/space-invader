@@ -313,7 +313,7 @@ bool BossShotHit(Game& g, const Shot& s) {
             if (CheckCollisionPointRec(s.pos, mr) ||
                 CheckCollisionRecs({s.pos.x - 2, s.pos.y - 7, 4, 14}, mr)) {
                 m.alive = false;
-                AddScore(g, cfg::kPtsMinion);
+                ComboKill(g, {m.pos.x, m.pos.y - 14.0f}, cfg::kPtsMinion, cfg::kColRow[1]);
                 SpawnExplosion(g, m.pos, cfg::kColRow[1], 10);
                 PlaySfx(*g.audio, Sfx::Pop, 1.3f);
                 return !s.pierce;

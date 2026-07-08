@@ -62,6 +62,14 @@ inline constexpr const char* kCompliments[] = {
 };
 inline constexpr int kComplimentCount = (int)(sizeof(kCompliments) / sizeof(kCompliments[0]));
 
+// ---- combo callouts (Productivity Streak) ----
+inline constexpr const char* kComboTierLines[3] = {
+    "SYNERGY ACHIEVED",       // tier 1
+    "EXCEEDS EXPECTATIONS",   // tier 2
+    "PROMOTION PENDING",      // tier 3
+};
+inline constexpr const char* kComboReset = "Multiplier reset. HR incident filed.";
+
 // ---- power-up toasts ----
 inline constexpr const char* kToastSpread   = "SPREAD THE WORD - now in surround sound.";
 inline constexpr const char* kToastPierce   = "PIERCING COMMENTARY - it cuts deep.";

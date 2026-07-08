@@ -163,18 +163,19 @@ void KillInvader(Game& g, int idx) {
 
     int row = idx / cfg::kGridCols;
     int pts = cfg::kPtsRow[row] * (v.tough ? 2 : 1);
-    AddScore(g, pts);
-
     Color c = cfg::kColRow[row];
-    SpawnScorePop(g, {v.pos.x, v.pos.y - cfg::kInvaderH}, pts, c);
+    ComboKill(g, {v.pos.x, v.pos.y - cfg::kInvaderH}, pts, c);  // score + pop + streak callouts
+
     if (g.rng.chance(cfg::kFallChance)) {
         SpawnFaller(g, idx);
         PlaySfx(*g.audio, Sfx::Scream, g.rng.range(0.9f, 1.1f));
     } else {
         SpawnExplosion(g, v.pos, c, 16);
         SpawnDebris(g, v.pos, c, 5);
-        float pitch = GridScale(g) < 1.0f ? 1.7f : g.rng.range(0.9f, 1.1f);
-        PlaySfx(*g.audio, Sfx::Pop, pitch);
+        // Pop pitch rises with the streak (composes with the TinyWave squeak override)
+        float basePitch = GridScale(g) < 1.0f ? 1.7f : g.rng.range(0.9f, 1.1f);
+        int ch = g.combo.chain < cfg::kComboChainPitchCap ? g.combo.chain : cfg::kComboChainPitchCap;
+        PlaySfx(*g.audio, Sfx::Pop, basePitch * (1.0f + cfg::kComboPitchStep * (float)ch));
     }
     g.shake = fmaxf(g.shake, 2.0f);
 
