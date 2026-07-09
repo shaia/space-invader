@@ -28,7 +28,7 @@ void SpawnGrid(Game& g) {
             v.tough = false;
             v.squash = 0;
             v.hitFlash = 0;
-            if (g.wave.number >= 4 && g.rng.chance(cfg::kOverachieverFrac)) {
+            if (g.wave.number >= 4 && g.setupRng.chance(cfg::kOverachieverFrac)) {
                 v.hp = 2;
                 v.tough = true;
             }
@@ -189,7 +189,7 @@ void KillInvader(Game& g, int idx) {
     }
     g.shake = fmaxf(g.shake, 2.0f);
 
-    MaybeDropPickup(g, v.pos);
+    MaybeDropPickup(g, v.pos, idx);
 
     // commentary milestones
     if (g.aliveCount == cfg::kGridCount - 1 && g.wave.number == 1)

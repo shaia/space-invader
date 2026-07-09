@@ -35,7 +35,7 @@ ModifierId PickNextModifier(Game& g) {
         g.wave.usedModifiers = 0;  // pool exhausted, reshuffle
 
     for (int tries = 0; tries < 64; tries++) {
-        int pick = g.rng.irange(0, count - 1);
+        int pick = g.setupRng.irange(0, count - 1);  // per-wave stream: deterministic in daily mode
         if (g.wave.usedModifiers & (1u << pick)) continue;
         g.wave.usedModifiers |= (1u << pick);
         return (ModifierId)(first + pick);

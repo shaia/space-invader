@@ -25,15 +25,19 @@ const PickupDef kDefs[(int)PowerKind::COUNT] = {
 const PickupDef& Def(PowerKind k) { return kDefs[(int)k]; }
 } // namespace
 
-void MaybeDropPickup(Game& g, Vector2 pos) {
+void MaybeDropPickup(Game& g, Vector2 pos, int idx) {
     if ((int)g.pickups.size() >= cfg::kMaxFalling) return;
-    if (!g.rng.chance(cfg::kDropChance * CollectMemoFx(g).dropMult)) return;  // PERFORMANCE BONUS halves drops
+    // Daily runs roll from a per-invader hash so a given invader always drops the
+    // same thing that day regardless of kill order; endless uses the live rng.
+    Rng seeded{Hash(g.dailySeed, (uint32_t)g.wave.number, (uint32_t)idx + 1u)};
+    Rng& r = (g.mode == RunMode::Daily) ? seeded : g.rng;
+    if (!r.chance(cfg::kDropChance * CollectMemoFx(g).dropMult)) return;  // PERFORMANCE BONUS halves drops
     PowerUp p;
     p.pos = pos;
-    int roll = g.rng.irange(0, (int)PowerKind::COUNT - 1);
+    int roll = r.irange(0, (int)PowerKind::COUNT - 1);
     // ExtraLife is rarer: reroll it half the time
-    if ((PowerKind)roll == PowerKind::ExtraLife && g.rng.chance(0.5f))
-        roll = g.rng.irange(0, (int)PowerKind::COUNT - 1);
+    if ((PowerKind)roll == PowerKind::ExtraLife && r.chance(0.5f))
+        roll = r.irange(0, (int)PowerKind::COUNT - 1);
     p.kind = (PowerKind)roll;
     g.pickups.push_back(p);
 }

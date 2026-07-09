@@ -25,6 +25,9 @@ struct Rng {
 // ---- screens ----
 enum class Screen { Title, Playing, Paused, GameOver, PerformanceReview, HighScoreEntry, Quit };
 
+// ---- run mode ----
+enum class RunMode : uint8_t { Endless, Daily };
+
 // ---- bubble anchor sentinels ----
 // Shared: enemy shots record who fired them (for the exit interview), so these
 // live above the entity structs that reference them.

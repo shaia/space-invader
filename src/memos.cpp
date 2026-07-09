@@ -68,7 +68,7 @@ void OfferMemos(Game& g) {
     o = MemoOffer{};
     o.count = nAvail < 3 ? nAvail : 3;
     for (int k = 0; k < o.count; k++) {  // partial Fisher-Yates from the front
-        int j = k + (int)(g.rng.uniform() * (float)(nAvail - k));
+        int j = k + (int)(g.setupRng.uniform() * (float)(nAvail - k));  // deterministic in daily mode
         if (j >= nAvail) j = nAvail - 1;
         int tmp = avail[k]; avail[k] = avail[j]; avail[j] = tmp;
         o.pick[k] = (MemoId)avail[k];

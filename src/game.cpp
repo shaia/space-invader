@@ -16,6 +16,12 @@ bool WorldFrozen(const Game& g) {
     return !g.player.alive || g.wave.clearing;
 }
 
+uint32_t Hash(uint32_t a, uint32_t b, uint32_t c) {
+    uint32_t h = a * 2654435761u + b * 40503u + c * 2246822519u + 0x9E3779B9u;
+    h ^= h >> 15; h *= 0x2C1B3C6Du; h ^= h >> 12; h *= 0x297A2D39u; h ^= h >> 15;
+    return h ? h : 0x9E3779B9u;  // never a zero seed
+}
+
 void AddScore(Game& g, int points) {
     g.score += (int)((float)points * CurrentMod(g).scoreMult * CollectMemoFx(g).scoreMult);
     if (g.score > g.hiScore) g.hiScore = g.score;
@@ -88,10 +94,15 @@ void ResetRun(Game& g) {
     AudioBank* audio = g.audio;
     int hi = g.hiScore;
     uint32_t rngState = g.rng.s;
+    RunMode mode = g.mode;          // the chosen mode/seed must survive the wipe
+    uint32_t dailySeed = g.dailySeed;
     g = Game{};
     g.audio = audio;
     g.hiScore = hi;
+    g.mode = mode;
+    g.dailySeed = dailySeed;
     g.rng.s = rngState ? rngState : 0x9E3779B9u;
+    if (mode == RunMode::Daily) g.rng.s = dailySeed ? dailySeed : 0x9E3779B9u;
     g.player.pos = {cfg::kCanvasW / 2.0f, cfg::kPlayerY};
     g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
     InitStarfield(g);
@@ -103,6 +114,11 @@ void StartWave(Game& g, int number) {
     g.wave.number = number;
     g.wave.clearing = false;
     g.wave.intermission = 0;
+    // Deterministic per-wave stream for layout/modifier/memo rolls. In daily mode
+    // it hashes from the date so everyone gets the same wave; in endless it just
+    // forks off the main rng, so there's a single code path downstream.
+    g.setupRng.s = (g.mode == RunMode::Daily) ? Hash(g.dailySeed, (uint32_t)number)
+                                              : (g.rng.next() | 1u);
     g.wave.bossWave = (number % cfg::kBossEvery == 0);
     g.wave.modifier = ModifierId::None;
     g.boss.active = false;
@@ -451,6 +467,11 @@ void DrawHud(const Game& g) {
     const char* wv = g.wave.bossWave ? "WAVE: MGMT" : TextFormat("WAVE %d", g.wave.number);
     int ww = MeasureText(wv, 20);
     GlowText(wv, cfg::kCanvasW - ww - 16, 12, 20, cfg::kColHud);
+    if (g.mode == RunMode::Daily) {
+        const char* dl = "MANDATORY OVERTIME";
+        int dw = MeasureText(dl, 13);
+        DrawText(dl, cfg::kCanvasW - dw - 16, 36, 13, WithAlpha(cfg::kColAccent, 0.9f));
+    }
 
     const Modifier& m = CurrentMod(g);
     if (m.id != ModifierId::None) {
