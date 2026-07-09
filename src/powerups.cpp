@@ -27,7 +27,7 @@ const PickupDef& Def(PowerKind k) { return kDefs[(int)k]; }
 
 void MaybeDropPickup(Game& g, Vector2 pos) {
     if ((int)g.pickups.size() >= cfg::kMaxFalling) return;
-    if (!g.rng.chance(cfg::kDropChance)) return;
+    if (!g.rng.chance(cfg::kDropChance * CollectMemoFx(g).dropMult)) return;  // PERFORMANCE BONUS halves drops
     PowerUp p;
     p.pos = pos;
     int roll = g.rng.irange(0, (int)PowerKind::COUNT - 1);
@@ -72,7 +72,7 @@ void ActivatePickup(Game& g, PowerKind kind) {
         if (idx >= 0) PushBubble(g, idx, content::kFreezeBreak, cfg::kFxFreeze);
         break;
     }
-    case PowerKind::Shield: g.player.shieldHits = cfg::kShieldHits; break;
+    case PowerKind::Shield: g.player.shieldHits = CollectMemoFx(g).shieldCap; break;
     case PowerKind::ExtraLife:
         if (g.lives < cfg::kMaxLives) g.lives++;
         break;

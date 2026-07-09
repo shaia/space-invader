@@ -7,8 +7,9 @@
 const Modifier& CurrentMod(const Game& g) { return GetModifier(g.wave.modifier); }
 
 Rectangle PlayerRect(const Game& g) {
-    return {g.player.pos.x - cfg::kPlayerW / 2, g.player.pos.y - cfg::kPlayerH / 2,
-            cfg::kPlayerW, cfg::kPlayerH};
+    float hb = CollectMemoFx(g).hitboxMult;   // OPEN FLOOR PLAN grows the hitbox
+    float w = cfg::kPlayerW * hb, h = cfg::kPlayerH * hb;
+    return {g.player.pos.x - w / 2, g.player.pos.y - h / 2, w, h};
 }
 
 bool WorldFrozen(const Game& g) {
@@ -16,7 +17,7 @@ bool WorldFrozen(const Game& g) {
 }
 
 void AddScore(Game& g, int points) {
-    g.score += (int)((float)points * CurrentMod(g).scoreMult);
+    g.score += (int)((float)points * CurrentMod(g).scoreMult * CollectMemoFx(g).scoreMult);
     if (g.score > g.hiScore) g.hiScore = g.score;
 }
 
@@ -203,6 +204,21 @@ void DebugKeys(Game& g) {
         g.player.invuln = 0;
         HitPlayer(g, "debug");
     }
+    if (IsKeyPressed(KEY_F7))    // +10 combo chain (tiers / callouts / hit-stop / pitch)
+        for (int i = 0; i < 10; i++)
+            ComboKill(g, {g.player.pos.x, g.player.pos.y - 40.0f}, 10, cfg::kColAccent);
+    if (IsKeyPressed(KEY_F8)) {  // jump to the next boss wave
+        int next = ((g.wave.number / cfg::kBossEvery) + 1) * cfg::kBossEvery;
+        for (auto& v : g.invaders) v.alive = false;
+        g.aliveCount = 0;
+        StartWave(g, next);
+    }
+    if (IsKeyPressed(KEY_F9)) {  // simulate a post-boss memo offer
+        g.wave.clearing = true;
+        g.wave.intermission = cfg::kIntermission + 5.0f;
+        OfferMemos(g);
+    }
+    if (IsKeyPressed(KEY_F10)) g.gameOver = true;  // jump to the Performance Review
 }
 #endif
 
@@ -246,14 +262,14 @@ void ResolveCollisions(Game& g) {
                             cfg::kUfoW, cfg::kUfoH};
             if (CheckCollisionRecs(sr, ur)) {
                 if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
-                int pts = 50 * g.rng.irange(1, 6);
+                int pts = (int)(50 * g.rng.irange(1, 6) * CollectMemoFx(g).ufoPayMult);
                 ComboKill(g, {g.ufo.pos.x, g.ufo.pos.y - 20.0f}, pts, cfg::kColUfo);
                 SpawnExplosion(g, g.ufo.pos, cfg::kColUfo, 30);
                 SpawnConfetti(g, g.ufo.pos, 20);
                 PushToast(g, TextFormat("THE CONSULTANT: invoiced for %d pts.", pts));
                 PlaySfx(*g.audio, Sfx::Pop, 0.7f);
                 g.ufo.active = false;
-                g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
+                g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap) * CollectMemoFx(g).ufoGapMult;
                 consumed = !s.pierce;
             }
         }
@@ -302,9 +318,9 @@ void ResolveCollisions(Game& g) {
         // graze: an enemy shot sliding past (near but not touching) pays hazard pay.
         // Checked before the hit test so the two are mutually exclusive this frame.
         if (!s.grazed && g.player.alive && g.player.invuln <= 0) {
+            float gr = cfg::kGrazeRadius * CollectMemoFx(g).grazeMult;  // OPEN FLOOR PLAN widens it
             Rectangle pr = PlayerRect(g);
-            Rectangle grazeBox = {pr.x - cfg::kGrazeRadius, pr.y - cfg::kGrazeRadius,
-                                  pr.width + 2 * cfg::kGrazeRadius, pr.height + 2 * cfg::kGrazeRadius};
+            Rectangle grazeBox = {pr.x - gr, pr.y - gr, pr.width + 2 * gr, pr.height + 2 * gr};
             Rectangle sr = ShotRect(s);
             if (CheckCollisionRecs(sr, grazeBox) && !CheckCollisionRecs(sr, pr)) {
                 s.grazed = true;
@@ -374,6 +390,7 @@ void UpdatePlaying(Game& g, float dt) {
     }
 
     if (g.wave.clearing) {
+        if (g.memoOffer.active) { UpdateMemoOffer(g, dt); return; }  // pauses the countdown
         g.wave.intermission -= dt;  // real dt: the between-wave beat isn't frozen
         if (g.wave.intermission <= 0)
             StartWave(g, g.wave.number + 1);
@@ -470,7 +487,7 @@ void DrawHud(const Game& g) {
                             g.hitStop * 1000.0f), 14, 134, 12, GREEN);
         DrawText(TextFormat("acc %d/%d  grazes %d", g.stats.shotsHit, g.stats.shotsFired,
                             g.stats.grazes), 14, 150, 12, GREEN);
-        DrawText("F2 wave F3 pwr F4 mod F5 thin F6 die", 14, 172, 12, GREEN);
+        DrawText("F2wave F3pwr F4mod F5thin F6die F7combo F8boss F9memo F10end", 14, 172, 11, GREEN);
     }
 #endif
 }
@@ -568,4 +585,5 @@ void DrawPlaying(const Game& g) {
 
     DrawHud(g);
     DrawEffectHud(g);
+    if (g.memoOffer.active) DrawMemoOffer(g);
 }
