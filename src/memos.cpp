@@ -33,6 +33,7 @@ void SignMemo(Game& g, MemoId id) {
     if (m.lifeNow > 0 && g.lives < cfg::kMaxLives) g.lives += m.lifeNow;
     PushToast(g, TextFormat("SIGNED: %s", m.name.data()));
     PlaySfx(*g.audio, Sfx::Ding);
+    if (g.stats.memosSigned >= 3) TryAward(g, Ach::PaperTrail);
 }
 } // namespace
 

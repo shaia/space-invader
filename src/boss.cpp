@@ -62,6 +62,7 @@ void BossDefeated(Game& g) {
     if (b.kind == BossKind::Karen) TryAward(g, Ach::SpeakToTheManager);
     if (b.kind == BossKind::Local1978 && g.lives == b.livesAtStart)
         TryAward(g, Ach::UnionBuster);
+    if (b.kind == BossKind::Lawyer) TryAward(g, Ach::BillableHours);
 
     // clear leftover boss projectiles kindly
     std::erase_if(g.shots, [](const Shot& s) { return !s.fromPlayer; });

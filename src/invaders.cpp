@@ -65,6 +65,17 @@ void MarchStep(Game& g) {
             if (v.alive) v.pos.y += cfg::kMarchDropY;
         g.marchDir = -g.marchDir;
         g.descendPending = false;
+        if (CurrentMod(g).reorg) {  // QUARTERLY REORG: shuffle survivor column positions
+            int idxs[cfg::kGridCount], n = 0;
+            for (int i = 0; i < cfg::kGridCount; i++)
+                if (g.invaders[i].alive) idxs[n++] = i;
+            for (int i = n - 1; i > 0; i--) {
+                int j = g.setupRng.irange(0, i);
+                float tx = g.invaders[idxs[i]].pos.x;
+                g.invaders[idxs[i]].pos.x = g.invaders[idxs[j]].pos.x;
+                g.invaders[idxs[j]].pos.x = tx;
+            }
+        }
     } else {
         float dx = cfg::kMarchStepX * (float)g.marchDir;
         float minX = 1e9f, maxX = -1e9f;
@@ -130,7 +141,12 @@ void DropBomb(Game& g) {
         s.label = content::kCompliments[g.rng.irange(0, content::kComplimentCount - 1)];
     } else {
         s.kind = ShotKind::Bomb;
-        s.vel = {0, cfg::kBombSpeed * bs};
+        float vx = 0.0f;
+        if (m.homingBombs) {  // MICROMANAGEMENT: aim toward the player
+            float dir = g.player.pos.x - shooter.pos.x;
+            vx = (dir > 0 ? 1.0f : -1.0f) * g.rng.range(30.0f, 60.0f);
+        }
+        s.vel = {vx, cfg::kBombSpeed * bs};
     }
     g.shots.push_back(s);
 }
@@ -205,6 +221,7 @@ void KillInvader(Game& g, int idx) {
         SpawnShockwave(g, v.pos, cfg::kColPlayer, 20.0f);
         g.shake = fmaxf(g.shake, 6.0f);
         g.hitStop = fmaxf(g.hitStop, cfg::kHitStopBossPhase);
+        if (g.panicTimer >= cfg::kPanicAchSecs) TryAward(g, Ach::SeverancePackage);
     }
 }
 

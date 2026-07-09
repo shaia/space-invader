@@ -180,7 +180,8 @@ struct FallingInvader {
 // ---- wave modifiers ----
 enum class ModifierId : uint8_t {
     None, OppositeDay, BudgetCuts, PassiveAggression, DiscoInferno,
-    SpeedrunAnyPercent, TinyWave, Understudies, MirrorMatch, COUNT
+    SpeedrunAnyPercent, TinyWave, Understudies, MirrorMatch,
+    ReturnToOffice, QuarterlyReorg, Micromanagement, COUNT
 };
 
 struct Modifier {
@@ -196,6 +197,9 @@ struct Modifier {
     float scale = 1.0f;
     bool wobbly = false;
     bool mirrorCannon = false;
+    bool noBunkers = false;    // RETURN TO OFFICE: bunkers phase out this wave (cells preserved)
+    bool reorg = false;        // QUARTERLY REORG: shuffle survivor columns on each descend
+    bool homingBombs = false;  // MICROMANAGEMENT: bombs drift toward the player
 };
 
 // ---- boss ----
@@ -308,7 +312,10 @@ struct Announcement {
 
 enum class Ach : uint8_t {
     PacifistRun, FriendlyFire, UnionBuster, SpeakToTheManager,
-    Hoarder, CeasefireViolation, ThisIsFine, Y1978, COUNT
+    Hoarder, CeasefireViolation, ThisIsFine, Y1978,
+    // append-only below: achMask is persisted, so never reorder these
+    PromotionPending, WorkersComp, PaperTrail, SeverancePackage, BillableHours, MandatoryOvertime,
+    COUNT
 };
 
 struct UiFx {
