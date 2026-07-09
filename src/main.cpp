@@ -100,6 +100,7 @@ int main() {
         if (next != screen) {
             if (next == Screen::Playing && screen != Screen::Paused) {
                 ResetRun(g);
+                g.hiScore = (g.mode == RunMode::Daily) ? hs.daily[0].score : hs.table[0].score;
                 entry = ScoreEntryState{};
             }
             screen = next;
