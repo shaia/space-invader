@@ -65,6 +65,7 @@ void BossDefeated(Game& g) {
     std::erase_if(g.shots, [](const Shot& s) { return !s.fromPlayer; });
     g.wave.clearing = true;
     g.wave.intermission = cfg::kIntermission + 1.0f;
+    OfferMemos(g);  // sign one perk-with-a-catch before the next wave
 }
 
 void EnemyShot(Game& g, Vector2 pos, Vector2 vel, ShotKind kind) {

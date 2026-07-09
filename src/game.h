@@ -45,6 +45,8 @@ struct Game {
     RunStats stats{};
     Combo combo{};
     bool comboBroken = false;    // set when a hit breaks a tier>=1 streak; consumed by reactive commentary
+    uint32_t memoMask = 0;       // signed boss memos
+    MemoOffer memoOffer{};
     Rng rng{};
 
     AudioBank* audio = nullptr;  // owned by main
@@ -100,6 +102,13 @@ int ActiveEffectCount(const Game& g);
 // ---- modifiers.cpp ----
 const Modifier& GetModifier(ModifierId id);
 ModifierId PickNextModifier(Game& g);
+
+// ---- memos.cpp ----
+const Memo& GetMemo(MemoId id);
+MemoFx CollectMemoFx(const Game& g);   // fold every signed memo's effect
+void OfferMemos(Game& g);              // present three unsigned memos
+void UpdateMemoOffer(Game& g, float dt);
+void DrawMemoOffer(const Game& g);
 
 // ---- boss.cpp ----
 void StartBoss(Game& g);
