@@ -52,6 +52,7 @@ float StepInterval(const Game& g) {
     float waveScale = powf(cfg::kWaveSpeedMult, (float)(g.wave.number - 1));
     float interval = base / waveScale;
     if (g.aliveCount == 1) interval *= cfg::kPanicSpeedMult;  // the last one double-times
+    interval *= CollectMemoFx(g).marchMult;   // FLEXIBLE HOURS slows the march
     return interval;
 }
 
@@ -118,17 +119,18 @@ void DropBomb(Game& g) {
     const Invader& shooter = g.invaders[shooterIdx];
 
     const Modifier& m = CurrentMod(g);
+    float bs = CollectMemoFx(g).bombSpeedMult;  // ESPRESSO BUDGET speeds their bombs up
     Shot s;
     s.pos = {shooter.pos.x, shooter.pos.y + cfg::kInvaderH / 2};
     s.fromPlayer = false;
     s.owner = shooterIdx;  // for the exit interview if this bomb lands the kill
     if (m.complimentBombs) {
         s.kind = ShotKind::Compliment;
-        s.vel = {0, cfg::kBombSpeed * 0.8f};
+        s.vel = {0, cfg::kBombSpeed * 0.8f * bs};
         s.label = content::kCompliments[g.rng.irange(0, content::kComplimentCount - 1)];
     } else {
         s.kind = ShotKind::Bomb;
-        s.vel = {0, cfg::kBombSpeed};
+        s.vel = {0, cfg::kBombSpeed * bs};
     }
     g.shots.push_back(s);
 }
@@ -154,6 +156,7 @@ void UpdateInvaders(Game& g, float dt) {
 
     float rate = cfg::kBombBaseRate * (1.0f + cfg::kBombRateWave * (float)(g.wave.number - 1));
     if (g.aliveCount == 1) rate *= cfg::kPanicBombMult;  // panic fire
+    rate *= CollectMemoFx(g).bombRateMult;   // FLEXIBLE HOURS trades march speed for bomb rate
     g.bombTimer += dt;
     float gap = 1.0f / rate;
     if (g.bombTimer >= gap) {
@@ -265,6 +268,6 @@ void UpdateUfo(Game& g, float dt) {
     if (g.rng.chance(0.3f)) SpawnTrail(g, {u.pos.x - u.dir * cfg::kUfoW * 0.5f, u.pos.y}, cfg::kColUfo);
     if (u.pos.x < -cfg::kUfoW * 1.5f || u.pos.x > cfg::kCanvasW + cfg::kUfoW * 1.5f) {
         u.active = false;
-        u.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
+        u.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap) * CollectMemoFx(g).ufoGapMult;
     }
 }
