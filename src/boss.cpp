@@ -73,6 +73,7 @@ void EnemyShot(Game& g, Vector2 pos, Vector2 vel, ShotKind kind) {
     s.vel = vel;
     s.kind = kind;
     s.fromPlayer = false;
+    s.owner = kBubbleAnchorBoss;  // all boss/minion fire files under management
     if (kind == ShotKind::Clipboard) s.spin = g.rng.range(0, 360);
     g.shots.push_back(s);
 }
@@ -112,7 +113,7 @@ void UpdateKaren(Game& g, float dt) {
         b.pos.x += (L.x - b.pos.x) * fminf(1.0f, dt * 6.0f);
         if (L.t > L.telegraph && L.t < L.telegraph + 0.6f) {
             if (g.player.alive && fabsf(g.player.pos.x - L.x) < L.width / 2 + cfg::kPlayerW * 0.3f)
-                HitPlayer(g, "laser");
+                HitPlayer(g, "laser", kBubbleAnchorBoss);
             CarveBunkers(g, {L.x, cfg::kBunkerY + 20}, cfg::kCarveBoss * dt * 8.0f);
             g.shake = fmaxf(g.shake, 3.0f);
         }
@@ -228,7 +229,7 @@ void UpdateProducer(Game& g, float dt) {
         if (c.t > c.telegraph) {
             c.width = 8.0f + (c.t - c.telegraph) * 46.0f;  // the scope creeps
             if (g.player.alive && fabsf(g.player.pos.x - c.x) < c.width / 2)
-                HitPlayer(g, "scope creep");
+                HitPlayer(g, "scope creep", kBubbleAnchorBoss);
             if (c.t > c.telegraph + 2.5f) {
                 c.active = false;
                 b.attackTimer = g.rng.range(2.5f, 4.0f);
