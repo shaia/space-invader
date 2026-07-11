@@ -40,6 +40,8 @@ struct Game {
     float noShootTimer = 0.0f;   // Pacifist Run
     bool pacifistChecked = false;
     float panicTimer = 0.0f;     // seconds with exactly one invader left
+    float edgeDwell = 0.0f;      // continuous seconds hugging a wall (reactive commentary)
+    float lastShotAt = 0.0f;     // g.time of the last player shot
     RunStats stats{};
     Combo combo{};
     bool comboBroken = false;    // set when a hit breaks a tier>=1 streak; consumed by reactive commentary

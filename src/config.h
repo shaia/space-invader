@@ -106,6 +106,15 @@ inline constexpr int   kComboMult[4]      = {1, 2, 3, 5};   // score multiplier 
 inline constexpr float kComboPitchStep    = 0.04f;         // kill-SFX pitch rise per chain link
 inline constexpr int   kComboChainPitchCap = 15;           // pitch stops rising past this chain
 
+// ---- reactive commentary (invaders comment on how you play) ----
+inline constexpr float kReactiveCooldown  = 18.0f;   // min gap between reactive lines
+inline constexpr float kEdgeDwellFrac     = 0.18f;   // within this fraction of a wall = camping
+inline constexpr float kEdgeDwellSecs     = 8.0f;    // continuous corner time before a jab
+inline constexpr int   kLowAccuracyShots  = 40;      // min shots before judging accuracy
+inline constexpr float kLowAccuracy       = 0.35f;   // hit fraction below which they notice
+inline constexpr int   kNearHiScoreMargin = 300;     // points from the record to trigger
+inline constexpr float kPacifistStretch   = 12.0f;   // seconds without firing, mid-run
+
 // ---- graze (Hazard Pay: near-misses on enemy fire) ----
 inline constexpr float kGrazeRadius      = 30.0f;  // how close a shot must slide past
 inline constexpr int   kGrazePoints      = 5;

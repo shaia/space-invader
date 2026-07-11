@@ -46,6 +46,7 @@ void PlayerFire(Game& g) {
     p.fireCooldown = g.fx.rapid > 0 ? 0.13f : 0.05f;
     p.squash = 0.5f;
     g.noShootTimer = -1000.0f;  // pacifist window closed for this run
+    g.lastShotAt = g.time;
 
     if (g.fx.freeze > 0) TryAward(g, Ach::CeasefireViolation);
 
@@ -85,6 +86,11 @@ void UpdatePlayer(Game& g, float dt) {
     float half = cfg::kPlayerW / 2.0f + 6.0f;
     if (p.pos.x < half) p.pos.x = half;
     if (p.pos.x > cfg::kCanvasW - half) p.pos.x = cfg::kCanvasW - half;
+
+    // corner-camping watch: continuous time spent hugging either wall
+    float edge = cfg::kCanvasW * cfg::kEdgeDwellFrac;
+    if (p.pos.x < edge || p.pos.x > cfg::kCanvasW - edge) g.edgeDwell += dt;
+    else g.edgeDwell = 0.0f;
 
     if (IsKeyDown(KEY_SPACE)) PlayerFire(g);
 }

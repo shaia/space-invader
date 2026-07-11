@@ -82,6 +82,45 @@ inline constexpr const char* kComboReset = "Multiplier reset. HR incident filed.
 // ---- graze (Hazard Pay) ----
 inline constexpr const char* kHazardPay = "HAZARD PAY";
 
+// ---- reactive commentary (invaders react to how you play) ----
+inline constexpr const char* kReactiveAccuracy[] = {
+    "30 points each and\nhe's spraying?",
+    "The bunkers are on\nYOUR side, you know.",
+    "Is he even aiming,\nor just venting?",
+};
+inline constexpr int kReactiveAccuracyCount = (int)(sizeof(kReactiveAccuracy) / sizeof(kReactiveAccuracy[0]));
+
+inline constexpr const char* kReactiveCorner[] = {
+    "He's discovered corners.",
+    "Flanking is not\nin his contract.",
+    "The whole board\nand he picks a wall.",
+};
+inline constexpr int kReactiveCornerCount = (int)(sizeof(kReactiveCorner) / sizeof(kReactiveCorner[0]));
+
+inline constexpr const char* kReactiveLastLife[] = {
+    "One quarter left.\nAct natural.",
+    "Last life. Nobody\nmake any sudden moves.",
+};
+inline constexpr int kReactiveLastLifeCount = (int)(sizeof(kReactiveLastLife) / sizeof(kReactiveLastLife[0]));
+
+inline constexpr const char* kReactiveNearHi[] = {
+    "He's near the record.\nSomeone file an injunction.",
+    "Alert the record-keeper.\nThis is escalating.",
+};
+inline constexpr int kReactiveNearHiCount = (int)(sizeof(kReactiveNearHi) / sizeof(kReactiveNearHi[0]));
+
+inline constexpr const char* kReactiveComboLost[] = {
+    "The synergy is gone.\nHR has been informed.",
+    "Streak broken.\nMorale, improving.",
+};
+inline constexpr int kReactiveComboLostCount = (int)(sizeof(kReactiveComboLost) / sizeof(kReactiveComboLost[0]));
+
+inline constexpr const char* kReactivePacifist[] = {
+    "Is he... unionizing\nWITH us?",
+    "He stopped shooting.\nDeeply suspicious.",
+};
+inline constexpr int kReactivePacifistCount = (int)(sizeof(kReactivePacifist) / sizeof(kReactivePacifist[0]));
+
 // ---- exit interview (spoken by whoever downs the cannon) ----
 inline constexpr const char* kExitInterview[] = {
     "Nothing personal.\nIt was policy.",
