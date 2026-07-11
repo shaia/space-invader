@@ -39,6 +39,7 @@ struct Game {
     float time = 0.0f;           // run time, drives wobble/disco
     float noShootTimer = 0.0f;   // Pacifist Run
     bool pacifistChecked = false;
+    float panicTimer = 0.0f;     // seconds with exactly one invader left
     RunStats stats{};
     Combo combo{};
     bool comboBroken = false;    // set when a hit breaks a tier>=1 streak; consumed by reactive commentary

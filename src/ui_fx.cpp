@@ -121,6 +121,16 @@ void UpdateUiFx(Game& g, float dt) {
                 PushBubble(g, idx,
                            content::kAmbient[g.rng.irange(0, content::kAmbientCount - 1)], 4.5f);
         }
+    } else if (g.aliveCount == 1 && !g.wave.bossWave && g.uifx.bubbles.empty()) {
+        // the lone survivor panics on a faster cadence
+        g.uifx.ambientTimer -= dt;
+        if (g.uifx.ambientTimer <= 0) {
+            g.uifx.ambientTimer = g.rng.range(cfg::kPanicBubbleMin, cfg::kPanicBubbleMax);
+            int idx = RandomAliveInvader(g);
+            if (idx >= 0)
+                PushBubble(g, idx,
+                           content::kPanicLines[g.rng.irange(0, content::kPanicLineCount - 1)], 3.0f);
+        }
     }
 }
 
