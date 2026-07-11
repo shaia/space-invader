@@ -25,7 +25,7 @@ void SpawnShockwave(Game& g, Vector2 pos, Color c, float radius) {
     Push(g, p);
 }
 
-void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size) {
+void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size, std::string_view label) {
     Particle p;
     p.pos = pos;
     p.vel = {0, -46.0f};
@@ -33,6 +33,7 @@ void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size) {
     p.color = c;
     p.value = points;
     p.size = size;   // font size; combo tiers scale this up
+    p.label = label; // optional suffix, e.g. "HAZARD PAY"
     p.kind = ParticleKind::ScorePop;
     Push(g, p);
 }
@@ -171,7 +172,9 @@ void DrawParticles(const Game& g) {
             DrawRectangleRec({p.pos.x, p.pos.y, p.size, p.size}, WithAlpha(p.color, a));
             break;
         case ParticleKind::ScorePop: {
-            const char* t = TextFormat("%d", p.value);
+            const char* t = p.label.empty()
+                                ? TextFormat("%d", p.value)
+                                : TextFormat("+%d %.*s", p.value, (int)p.label.size(), p.label.data());
             int fs = (int)p.size;
             int w = MeasureText(t, fs);
             GlowText(t, (int)p.pos.x - w / 2, (int)p.pos.y, fs, WithAlpha(p.color, a));

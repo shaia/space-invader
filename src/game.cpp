@@ -299,6 +299,26 @@ void ResolveCollisions(Game& g) {
             continue;
         }
 
+        // graze: an enemy shot sliding past (near but not touching) pays hazard pay.
+        // Checked before the hit test so the two are mutually exclusive this frame.
+        if (!s.grazed && g.player.alive && g.player.invuln <= 0) {
+            Rectangle pr = PlayerRect(g);
+            Rectangle grazeBox = {pr.x - cfg::kGrazeRadius, pr.y - cfg::kGrazeRadius,
+                                  pr.width + 2 * cfg::kGrazeRadius, pr.height + 2 * cfg::kGrazeRadius};
+            Rectangle sr = ShotRect(s);
+            if (CheckCollisionRecs(sr, grazeBox) && !CheckCollisionRecs(sr, pr)) {
+                s.grazed = true;
+                AddScore(g, cfg::kGrazePoints);
+                g.stats.grazes++;
+                g.stats.waveGrazes++;
+                if (g.combo.timer > 0)  // extends an active streak; never starts one
+                    g.combo.timer = fminf(cfg::kComboWindow, g.combo.timer + cfg::kGrazeComboExtend);
+                SpawnScorePop(g, {s.pos.x, s.pos.y - 10.0f}, cfg::kGrazePoints, cfg::kColUfo, 14.0f,
+                              content::kHazardPay);
+                PlaySfx(*g.audio, Sfx::Blip, 1.8f);
+            }
+        }
+
         if (g.player.alive && CheckCollisionRecs(ShotRect(s), PlayerRect(g))) {
             HitPlayer(g, s.kind == ShotKind::Compliment ? "compliment" : "projectile");
             s.pos.y = cfg::kCanvasH + 100;

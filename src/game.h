@@ -111,7 +111,8 @@ void SpawnDebris(Game& g, Vector2 pos, Color c, int count);
 void SpawnConfetti(Game& g, Vector2 pos, int count);
 void SpawnTrail(Game& g, Vector2 pos, Color c);
 void SpawnShockwave(Game& g, Vector2 pos, Color c, float radius);
-void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size = 16.0f);
+void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size = 16.0f,
+                   std::string_view label = {});
 void SpawnMuzzle(Game& g, Vector2 pos, Color c);
 void UpdateParticles(Game& g, float dt);
 void DrawParticles(const Game& g);

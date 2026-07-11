@@ -97,6 +97,12 @@ inline constexpr int   kComboMult[4]      = {1, 2, 3, 5};   // score multiplier 
 inline constexpr float kComboPitchStep    = 0.04f;         // kill-SFX pitch rise per chain link
 inline constexpr int   kComboChainPitchCap = 15;           // pitch stops rising past this chain
 
+// ---- graze (Hazard Pay: near-misses on enemy fire) ----
+inline constexpr float kGrazeRadius      = 30.0f;  // how close a shot must slide past
+inline constexpr int   kGrazePoints      = 5;
+inline constexpr float kGrazeComboExtend = 0.6f;   // seconds added to an active streak
+inline constexpr int   kGrazeWaveAch     = 5;      // grazes in one wave for the achievement
+
 // ---- hit-stop (whole-world micro-freeze on impactful kills) ----
 inline constexpr float kHitStopKill       = 0.035f;  // base freeze on a kill
 inline constexpr float kHitStopBossPhase  = 0.08f;   // boss dialogue / phase crossing
