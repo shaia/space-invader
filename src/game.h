@@ -138,4 +138,7 @@ struct ScoreEntryState {
 Screen UpdateDrawTitle(Game& g, const HighScores& hs, float timer);
 Screen UpdateDrawPaused(const Game& g);
 Screen UpdateDrawGameOver(Game& g, const HighScores& hs, float timer, float dt);
+Screen UpdateDrawPerformanceReview(Game& g, HighScores& hs, float timer, float dt);
 Screen UpdateDrawHighScoreEntry(Game& g, HighScores& hs, ScoreEntryState& es, float timer);
+int GradeScore(const Game& g);          // 0..100 weighted run rating
+int GradeLetterIndex(int gradeScore);   // 0=F .. 5=S

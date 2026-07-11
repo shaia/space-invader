@@ -132,6 +132,27 @@ inline constexpr const char* kExitInterview[] = {
 };
 inline constexpr int kExitInterviewCount = (int)(sizeof(kExitInterview) / sizeof(kExitInterview[0]));
 
+// ---- Performance Review: per-stat verdicts [0]=poor, [1]=good ----
+inline constexpr const char* kReviewAccuracy[2]  = {"Spray and pray. Noted.", "Precise. HR is unnerved."};
+inline constexpr const char* kReviewWaves[2]     = {"A brief tenure.", "A long and storied shift."};
+inline constexpr const char* kReviewBosses[2]    = {"Management remains.", "Management has notes. And wounds."};
+inline constexpr const char* kReviewChain[2]     = {"No rhythm to speak of.", "Genuinely synergistic."};
+inline constexpr const char* kReviewGrazes[2]    = {"Risk-averse. Understandable.", "Lives dangerously. Billably."};
+inline constexpr const char* kReviewBunkers[2]   = {"The real estate is gone.", "Property mostly intact."};
+inline constexpr const char* kReviewPowerups[2]  = {"Declined the benefits package.", "Fully vested."};
+inline constexpr const char* kReviewIncidents[2] = {"Several incidents on file.", "An exemplary safety record."};
+
+// grade verdicts, indexed F D C B A S
+inline constexpr const char* kGradeLines[6] = {
+    "F - We've scheduled a chat.",
+    "D - Room for growth. Lots of it.",
+    "C - Meets the bare minimum.",
+    "B - A solid contributor.",
+    "A - Exceeds expectations.",
+    "S - Suspiciously exceptional. Audit pending.",
+};
+inline constexpr const char* kGradeLetters[6] = {"F", "D", "C", "B", "A", "S"};
+
 // ---- power-up toasts ----
 inline constexpr const char* kToastSpread   = "SPREAD THE WORD - now in surround sound.";
 inline constexpr const char* kToastPierce   = "PIERCING COMMENTARY - it cuts deep.";

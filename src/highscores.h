@@ -13,11 +13,15 @@ struct ScoreEntry {
 };
 
 struct HighScores {
-    std::array<ScoreEntry, 10> table{};
+    std::array<ScoreEntry, 10> table{};   // endless-mode records
+    std::array<ScoreEntry, 10> daily{};   // today's daily-challenge records
     uint32_t achMask = 0;   // all achievements ever earned
+    int bestGrade = 0;      // best Performance Review grade, 0=F .. 5=S
+    int dailyDate = 0;      // yyyymmdd the daily table belongs to (0 = none)
 
     void LoadOrDefaults();
     void Save() const;
-    bool Qualifies(int score) const;
-    int Insert(int score, const std::string& name);  // returns rank 0-9, or -1
+    // `daily` selects the daily table instead of the endless table
+    bool Qualifies(int score, bool daily = false) const;
+    int Insert(int score, const std::string& name, bool daily = false);  // rank 0-9, or -1
 };
