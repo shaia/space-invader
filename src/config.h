@@ -97,6 +97,13 @@ inline constexpr int   kComboMult[4]      = {1, 2, 3, 5};   // score multiplier 
 inline constexpr float kComboPitchStep    = 0.04f;         // kill-SFX pitch rise per chain link
 inline constexpr int   kComboChainPitchCap = 15;           // pitch stops rising past this chain
 
+// ---- hit-stop (whole-world micro-freeze on impactful kills) ----
+inline constexpr float kHitStopKill       = 0.035f;  // base freeze on a kill
+inline constexpr float kHitStopBossPhase  = 0.08f;   // boss dialogue / phase crossing
+inline constexpr float kHitStopBossKill   = 0.14f;   // boss defeated
+inline constexpr float kHitStopComboBonus = 0.002f;  // extra freeze per chain link
+inline constexpr float kHitStopMax        = 0.16f;   // ceiling so it never stalls
+
 // ---- scoring ----
 inline constexpr int kPtsRow[5]     = {30, 20, 20, 10, 10}; // by grid row, top first
 inline constexpr int kPtsMinion     = 25;

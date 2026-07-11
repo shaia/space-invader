@@ -48,6 +48,11 @@ void ComboKill(Game& g, Vector2 pos, int basePts, Color c) {
 
     AddScore(g, basePts * cfg::kComboMult[tier]);
 
+    // a brief freeze on the kill, deepening with the streak
+    g.hitStop = fmaxf(g.hitStop,
+                      fminf(cfg::kHitStopKill + (float)cb.chain * cfg::kHitStopComboBonus,
+                            cfg::kHitStopMax));
+
     const float sizeByTier[4] = {16.0f, 18.0f, 22.0f, 26.0f};
     SpawnScorePop(g, pos, basePts * cfg::kComboMult[tier],
                   tier > 0 ? cfg::kColAccent : c, sizeByTier[tier]);
@@ -433,7 +438,7 @@ void DrawHud(const Game& g) {
 
 #if DEBUG_KEYS
     if (IsKeyDown(KEY_F1)) {
-        DrawRectangle(8, 64, 240, 96, WithAlpha({0, 0, 0, 255}, 0.7f));
+        DrawRectangle(8, 64, 260, 128, WithAlpha({0, 0, 0, 255}, 0.7f));
         DrawText(TextFormat("fps %d  dt %0.1fms", GetFPS(), GetFrameTime() * 1000), 14, 70, 12, GREEN);
         DrawText(TextFormat("alive %d shots %d parts %d", g.aliveCount, (int)g.shots.size(),
                             (int)g.particles.size()), 14, 86, 12, GREEN);
@@ -441,7 +446,11 @@ void DrawHud(const Game& g) {
                             (int)g.boss.active, g.boss.hp), 14, 102, 12, GREEN);
         DrawText(TextFormat("fx s%.1f p%.1f r%.1f f%.1f", g.fx.spread, g.fx.pierce, g.fx.rapid,
                             g.fx.freeze), 14, 118, 12, GREEN);
-        DrawText("F2 wave F3 pwr F4 mod F5 thin", 14, 134, 12, GREEN);
+        DrawText(TextFormat("combo x%d t%d  hitstop %.0fms", g.combo.chain, g.combo.tier,
+                            g.hitStop * 1000.0f), 14, 134, 12, GREEN);
+        DrawText(TextFormat("acc %d/%d  grazes %d", g.stats.shotsHit, g.stats.shotsFired,
+                            g.stats.grazes), 14, 150, 12, GREEN);
+        DrawText("F2 wave F3 pwr F4 mod F5 thin F6 die", 14, 172, 12, GREEN);
     }
 #endif
 }
