@@ -116,14 +116,10 @@ void UpdateUiFx(Game& g, float dt) {
         g.uifx.ambientTimer -= dt;
         if (g.uifx.ambientTimer <= 0) {
             g.uifx.ambientTimer = g.rng.range(cfg::kBubbleAmbientMin, cfg::kBubbleAmbientMax);
-            for (int tries = 0; tries < 30; tries++) {
-                int idx = g.rng.irange(0, cfg::kGridCount - 1);
-                if (g.invaders[idx].alive) {
-                    PushBubble(g, idx,
-                               content::kAmbient[g.rng.irange(0, content::kAmbientCount - 1)], 4.5f);
-                    break;
-                }
-            }
+            int idx = RandomAliveInvader(g);
+            if (idx >= 0)
+                PushBubble(g, idx,
+                           content::kAmbient[g.rng.irange(0, content::kAmbientCount - 1)], 4.5f);
         }
     }
 }

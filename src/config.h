@@ -2,7 +2,8 @@
 #pragma once
 #include "raylib.h"
 
-// Compile-time debug helpers: F1 overlay, F2 skip wave, F3 powerup, F4 modifier, F5 kill-all-but-one
+// Compile-time debug helpers: F1 overlay, F2 skip wave, F3 powerup, F4 modifier,
+// F5 kill-all-but-one, F6 sacrifice life, F7 +combo, F8 next boss, F9 memos, F10 review
 #define DEBUG_KEYS 1
 
 namespace cfg {

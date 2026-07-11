@@ -35,9 +35,11 @@ struct Game {
     bool gameOver = false;
     bool overrun = false;        // invaders reached the bottom
     float shake = 0.0f;
+    float hitStop = 0.0f;        // brief whole-world freeze on impactful kills (seconds)
     float time = 0.0f;           // run time, drives wobble/disco
     float noShootTimer = 0.0f;   // Pacifist Run
     bool pacifistChecked = false;
+    RunStats stats{};
     Rng rng{};
 
     AudioBank* audio = nullptr;  // owned by main
@@ -55,6 +57,7 @@ void AddScore(Game& g, int points);
 const Modifier& CurrentMod(const Game& g);
 Rectangle PlayerRect(const Game& g);
 bool WorldFrozen(const Game& g);  // death pause / intermission
+int RandomAliveInvader(Game& g);  // random living grid index, or -1 if none
 
 // ---- invaders.cpp ----
 void SpawnGrid(Game& g);

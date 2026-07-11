@@ -91,7 +91,7 @@ bool ShotHitsBunker(const Game& g, const Shot& s, Vector2& hitPoint) {
 bool CarveBunkers(Game& g, Vector2 hit, float radius) {
     bool carved = false;
     for (auto& b : g.bunkers) {
-        if (b.aliveCells == 0) continue;
+        if (b.aliveCells == 0) continue;  // entered with cells; a drop to 0 means it just fell
         for (int r = 0; r < cfg::kBunkerRows; r++) {
             for (int c = 0; c < cfg::kBunkerCols; c++) {
                 uint8_t& cell = b.cells[r * cfg::kBunkerCols + c];
@@ -109,6 +109,7 @@ bool CarveBunkers(Game& g, Vector2 hit, float radius) {
                 }
             }
         }
+        if (b.aliveCells == 0) g.stats.bunkersLost++;
     }
     return carved;
 }

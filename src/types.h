@@ -25,6 +25,14 @@ struct Rng {
 // ---- screens ----
 enum class Screen { Title, Playing, Paused, GameOver, HighScoreEntry, Quit };
 
+// ---- bubble anchor sentinels ----
+// Shared: enemy shots record who fired them (for the exit interview), so these
+// live above the entity structs that reference them.
+inline constexpr int kBubbleAnchorFixed = -1;
+inline constexpr int kBubbleAnchorBoss  = -2;
+inline constexpr int kBubbleAnchorUfo   = -3;
+inline constexpr int kBubbleAnchorFallerBase = -16;  // anchor = base - (int)faller.id
+
 // ---- entities ----
 struct Player {
     Vector2 pos{};            // center
@@ -55,6 +63,10 @@ struct Shot {
     bool pierce = false;
     float spin = 0.0f;        // clipboards tumble
     std::string_view label{}; // compliment text (view into static kCompliments)
+    int owner = kBubbleAnchorFixed; // enemy shot: who fired it (grid idx / boss / faller), for exit interview
+    bool grazed = false;      // enemy shot already paid a graze bonus (once per shot)
+    bool tallied = false;     // player shot already counted toward accuracy (once per shot)
+    int hp = 0;               // 0 = indestructible; >0 = shootable projectile (Lawyer subpoenas)
 };
 
 struct Bunker {
@@ -79,6 +91,21 @@ struct ActiveEffects {
     float rapid = 0.0f;
     float freeze = 0.0f;
     bool bigShotArmed = false;
+};
+
+// ---- per-run stats (drives the Performance Review + reactive commentary) ----
+struct RunStats {
+    int shotsFired = 0;
+    int shotsHit = 0;
+    int wavesCleared = 0;
+    int bossesDefeated = 0;
+    int bunkersLost = 0;
+    int grazes = 0;
+    int waveGrazes = 0;      // grazes this wave, reset in StartWave
+    int powerups = 0;
+    int incidents = 0;       // exit-interview counter
+    int maxChain = 0;        // best combo chain reached
+    int memosSigned = 0;
 };
 
 struct Ufo {
@@ -209,10 +236,6 @@ struct Bubble {
     Vector2 pos{};            // used when anchor is fixed
     float t = 0.0f, dur = 4.0f;
 };
-inline constexpr int kBubbleAnchorFixed = -1;
-inline constexpr int kBubbleAnchorBoss  = -2;
-inline constexpr int kBubbleAnchorUfo   = -3;
-inline constexpr int kBubbleAnchorFallerBase = -16;  // anchor = base - (int)faller.id
 
 struct Toast {
     std::string text;

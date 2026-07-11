@@ -42,6 +42,7 @@ void CheckDialogue(Game& g) {
 void BossDefeated(Game& g) {
     Boss& b = g.boss;
     b.active = false;
+    g.stats.bossesDefeated++;
     AddScore(g, cfg::kBossBonusPer * g.wave.number);
     SpawnConfetti(g, b.pos, 120);
     SpawnExplosion(g, b.pos, cfg::kColUfo, 60);

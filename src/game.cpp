@@ -20,6 +20,17 @@ void AddScore(Game& g, int points) {
     if (g.score > g.hiScore) g.hiScore = g.score;
 }
 
+int RandomAliveInvader(Game& g) {
+    if (g.aliveCount <= 0) return -1;
+    for (int tries = 0; tries < 30; tries++) {
+        int idx = g.rng.irange(0, cfg::kGridCount - 1);
+        if (g.invaders[idx].alive) return idx;
+    }
+    for (int i = 0; i < cfg::kGridCount; i++)  // deterministic fallback
+        if (g.invaders[i].alive) return i;
+    return -1;
+}
+
 void InitStarfield(Game& g) {
     g.stars.clear();
     g.stars.reserve((size_t)cfg::kStarLayers * cfg::kStarsPerLayer);
@@ -95,6 +106,7 @@ namespace {
 void FinishWave(Game& g) {
     g.wave.clearing = true;
     g.wave.intermission = cfg::kIntermission;
+    g.stats.wavesCleared++;
     int bonus = cfg::kWaveBonusPer * g.wave.number;
     AddScore(g, bonus);
     PushToast(g, TextFormat("Wave %d cleared. Severance: %d pts.", g.wave.number, bonus));
@@ -183,6 +195,7 @@ void ResolveCollisions(Game& g) {
             Invader& v = g.invaders[i];
             if (!v.alive) continue;
             if (!CheckCollisionRecs(sr, InvaderRect(g, i))) continue;
+            if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
             v.hp -= s.kind == ShotKind::BigShot ? 2 : 1;
             if (v.hp > 0) {
                 v.hitFlash = 0.25f;
@@ -198,6 +211,7 @@ void ResolveCollisions(Game& g) {
             Rectangle ur = {g.ufo.pos.x - cfg::kUfoW / 2, g.ufo.pos.y - cfg::kUfoH / 2,
                             cfg::kUfoW, cfg::kUfoH};
             if (CheckCollisionRecs(sr, ur)) {
+                if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
                 int pts = 50 * g.rng.irange(1, 6);
                 AddScore(g, pts);
                 SpawnExplosion(g, g.ufo.pos, cfg::kColUfo, 30);
@@ -210,8 +224,11 @@ void ResolveCollisions(Game& g) {
             }
         }
 
-        if (!consumed && g.boss.active)
-            consumed = BossShotHit(g, s);
+        if (!consumed && g.boss.active) {
+            bool bhit = BossShotHit(g, s);
+            if (bhit && !s.tallied) { s.tallied = true; g.stats.shotsHit++; }
+            consumed = bhit;
+        }
 
         // BigShot bulldozes enemy paperwork
         if (s.kind == ShotKind::BigShot) {
@@ -279,9 +296,15 @@ void UpdatePlaying(Game& g, float dt) {
     g.time += dt;
     if (g.shake > 0) g.shake = fmaxf(0.0f, g.shake - cfg::kShakeDecay * dt * (1.0f + g.shake));
 
+    // hit-stop: an impactful kill briefly freezes the whole simulation for extra
+    // punch. Cosmetic layers (particles, bubbles, toasts) keep running on real dt
+    // so sparks keep flying during the freeze — that reads as juice, not a stall.
+    float wdt = dt;
+    if (g.hitStop > 0.0f) { g.hitStop = fmaxf(0.0f, g.hitStop - dt); wdt = 0.0f; }
+
     UpdateUiFx(g, dt);
     UpdateParticles(g, dt);
-    UpdatePlayer(g, dt);
+    UpdatePlayer(g, wdt);
 
 #if DEBUG_KEYS
     DebugKeys(g);
@@ -297,7 +320,7 @@ void UpdatePlaying(Game& g, float dt) {
     }
 
     if (g.wave.clearing) {
-        g.wave.intermission -= dt;
+        g.wave.intermission -= dt;  // real dt: the between-wave beat isn't frozen
         if (g.wave.intermission <= 0)
             StartWave(g, g.wave.number + 1);
         return;
@@ -305,13 +328,13 @@ void UpdatePlaying(Game& g, float dt) {
 
     if (!g.player.alive) return;  // death freeze: the world respectfully pauses
 
-    UpdateInvaders(g, dt);
-    UpdateFallers(g, dt);
-    UpdateUfo(g, dt);
-    UpdateBoss(g, dt);
-    UpdateShots(g, dt);
-    UpdatePickups(g, dt);
-    UpdateEffects(g, dt);
+    UpdateInvaders(g, wdt);
+    UpdateFallers(g, wdt);
+    UpdateUfo(g, wdt);
+    UpdateBoss(g, wdt);
+    UpdateShots(g, wdt);
+    UpdatePickups(g, wdt);
+    UpdateEffects(g, wdt);
     ResolveCollisions(g);
 
     if (!g.wave.bossWave && g.aliveCount == 0 && !g.wave.clearing)
