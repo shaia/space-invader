@@ -52,6 +52,15 @@ inline constexpr float kBombRateWave   = 0.08f;    // +8% per wave
 inline constexpr float kWaveSpeedMult  = 1.06f;    // global speed per wave
 inline constexpr float kOverachieverFrac = 0.12f;  // fraction of 2-HP invaders from wave 4
 
+// ---- falling invaders ----
+inline constexpr float kFallChance  = 0.10f;   // killed invader tumbles instead of exploding
+inline constexpr float kFallGravity = 480.0f;  // px/s^2 (debris uses 500)
+inline constexpr float kFallInitVy  = 40.0f;   // initial downward kick
+inline constexpr float kFallDriftX  = 50.0f;   // max sideways drift px/s
+inline constexpr float kFallSpinMin = 140.0f;  // tumble deg/s
+inline constexpr float kFallSpinMax = 360.0f;
+inline constexpr float kFallQuipDur = 2.6f;
+
 // ---- UFO ----
 inline constexpr float kUfoY        = 92.0f;
 inline constexpr float kUfoSpeed    = 130.0f;

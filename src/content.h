@@ -31,6 +31,21 @@ inline constexpr const char* kOneLeft         = "I demand hazard pay.";
 inline constexpr const char* kPlayerDown      = "Take five, everyone.";
 inline constexpr const char* kFreezeBreak     = "ON BREAK";
 
+// ---- falling invader last words ----
+inline constexpr const char* kFallerQuips[] = {
+    "I will not fall down!",
+    "God save the manager!",
+    "Tell HR I regret nothing!",
+    "This is a demotion!",
+    "Put this on my timesheet!",
+    "Gravity is non-union!",
+    "I choose when I explode!",
+    "Forward my mail. Downward.",
+    "I'm taking the stairs!",
+    "Avenge my parking spot!",
+};
+inline constexpr int kFallerQuipCount = (int)(sizeof(kFallerQuips) / sizeof(kFallerQuips[0]));
+
 // ---- UFO flyby lines ----
 inline constexpr const char* kUfoLines[] = {
     "Scale pay for cameo\nappearances. Calling my agent.",

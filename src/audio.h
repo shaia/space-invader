@@ -6,7 +6,7 @@
 
 enum class Sfx : int {
     Shoot, Pop, PlayerDie, UfoWarble, Pickup, Expire, Crunch,
-    BossHit, BossRoar, Blip, Ding, BigShot,
+    Scream, BossHit, BossRoar, Blip, Ding, BigShot,
     March0, March1, March2, March3,
     COUNT
 };

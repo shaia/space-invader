@@ -125,6 +125,11 @@ Sound MakeSfx(Sfx id) {
         Voice(b, 0, 0.10f, Osc::Sine, 160, 60, 0.5f, 0.002f, 0.06f);
         return Bake(b, 0.85f);
     }
+    case Sfx::Scream: {
+        Buf b(1.0f);
+        Voice(b, 0, 0.9f, Osc::Saw, 780, 140, 0.55f, 0.005f, 0.25f, 12.0f, 35.0f);
+        return Bake(b, 0.85f);
+    }
     case Sfx::BossHit: {
         Buf b(0.12f);
         Voice(b, 0, 0.10f, Osc::Square, 180, 120, 0.8f, 0.002f, 0.05f);
