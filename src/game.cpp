@@ -31,6 +31,33 @@ int RandomAliveInvader(Game& g) {
     return -1;
 }
 
+// Score a kill through the Productivity Streak. Each kill inside the window
+// extends the chain; crossing a tier threshold multiplies score and fires a
+// deadpan callout. The score pop grows and shifts toward the accent color with
+// the tier so the reward reads visually, not just numerically.
+void ComboKill(Game& g, Vector2 pos, int basePts, Color c) {
+    Combo& cb = g.combo;
+    int oldTier = cb.tier;
+    cb.chain++;
+    cb.timer = cfg::kComboWindow;
+    int tier = 0;
+    for (int t = 0; t < 3; t++)
+        if (cb.chain >= cfg::kComboTierChain[t]) tier = t + 1;
+    cb.tier = tier;
+    if (cb.chain > g.stats.maxChain) g.stats.maxChain = cb.chain;
+
+    AddScore(g, basePts * cfg::kComboMult[tier]);
+
+    const float sizeByTier[4] = {16.0f, 18.0f, 22.0f, 26.0f};
+    SpawnScorePop(g, pos, basePts * cfg::kComboMult[tier],
+                  tier > 0 ? cfg::kColAccent : c, sizeByTier[tier]);
+
+    if (tier > oldTier) {  // crossed into a higher tier this kill
+        PushToast(g, content::kComboTierLines[tier - 1]);
+        PlaySfx(*g.audio, Sfx::Ding, 1.0f + 0.2f * (float)tier);
+    }
+}
+
 void InitStarfield(Game& g) {
     g.stars.clear();
     g.stars.reserve((size_t)cfg::kStarLayers * cfg::kStarsPerLayer);
@@ -74,6 +101,8 @@ void StartWave(Game& g, int number) {
     g.wave.modifier = ModifierId::None;
     g.boss.active = false;
     g.stepFlash = 0;
+    g.stats.waveGrazes = 0;
+    g.comboBroken = false;
 
     // enemy leftovers don't carry across waves
     std::erase_if(g.shots, [](const Shot& s) { return !s.fromPlayer; });
@@ -213,7 +242,7 @@ void ResolveCollisions(Game& g) {
             if (CheckCollisionRecs(sr, ur)) {
                 if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
                 int pts = 50 * g.rng.irange(1, 6);
-                AddScore(g, pts);
+                ComboKill(g, {g.ufo.pos.x, g.ufo.pos.y - 20.0f}, pts, cfg::kColUfo);
                 SpawnExplosion(g, g.ufo.pos, cfg::kColUfo, 30);
                 SpawnConfetti(g, g.ufo.pos, 20);
                 PushToast(g, TextFormat("THE CONSULTANT: invoiced for %d pts.", pts));
@@ -337,6 +366,12 @@ void UpdatePlaying(Game& g, float dt) {
     UpdateEffects(g, wdt);
     ResolveCollisions(g);
 
+    // the streak lapses when its window elapses — silently (the silence is the deadpan)
+    if (g.combo.timer > 0) {
+        g.combo.timer -= wdt;
+        if (g.combo.timer <= 0) { g.combo.timer = 0; g.combo.chain = 0; g.combo.tier = 0; }
+    }
+
     if (!g.wave.bossWave && g.aliveCount == 0 && !g.wave.clearing)
         FinishWave(g);
 }
@@ -379,6 +414,15 @@ void DrawHud(const Game& g) {
     if (m.id != ModifierId::None) {
         int mw = MeasureText(m.name.data(), 15);
         DrawText(m.name.data(), cfg::kCanvasW / 2 - mw / 2, 38, 15, WithAlpha(cfg::kColAccent, 0.9f));
+    }
+
+    // productivity streak meter, under the score
+    if (g.combo.chain >= 2) {
+        GlowText(TextFormat("STREAK x%d   MULT x%d", g.combo.chain, cfg::kComboMult[g.combo.tier]),
+                 16, 36, 16, cfg::kColAccent);
+        float frac = g.combo.timer / cfg::kComboWindow;
+        frac = frac < 0 ? 0 : (frac > 1 ? 1 : frac);
+        DrawRectangle(16, 53, (int)(150 * frac), 3, WithAlpha(cfg::kColAccent, 0.9f));
     }
 
     // lives as tiny cannons, bottom-left

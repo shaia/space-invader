@@ -90,6 +90,13 @@ inline constexpr float kFxRapid      = 8.0f;
 inline constexpr float kFxFreeze     = 4.0f;
 inline constexpr int   kShieldHits   = 3;
 
+// ---- combo (Productivity Streak) ----
+inline constexpr float kComboWindow       = 2.0f;          // seconds to chain the next kill
+inline constexpr int   kComboTierChain[3] = {5, 10, 20};   // chain lengths that raise the tier
+inline constexpr int   kComboMult[4]      = {1, 2, 3, 5};   // score multiplier per tier (0..3)
+inline constexpr float kComboPitchStep    = 0.04f;         // kill-SFX pitch rise per chain link
+inline constexpr int   kComboChainPitchCap = 15;           // pitch stops rising past this chain
+
 // ---- scoring ----
 inline constexpr int kPtsRow[5]     = {30, 20, 20, 10, 10}; // by grid row, top first
 inline constexpr int kPtsMinion     = 25;

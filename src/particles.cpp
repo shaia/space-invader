@@ -25,13 +25,14 @@ void SpawnShockwave(Game& g, Vector2 pos, Color c, float radius) {
     Push(g, p);
 }
 
-void SpawnScorePop(Game& g, Vector2 pos, int points, Color c) {
+void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size) {
     Particle p;
     p.pos = pos;
     p.vel = {0, -46.0f};
     p.maxLife = p.life = 0.9f;
     p.color = c;
     p.value = points;
+    p.size = size;   // font size; combo tiers scale this up
     p.kind = ParticleKind::ScorePop;
     Push(g, p);
 }
@@ -171,8 +172,9 @@ void DrawParticles(const Game& g) {
             break;
         case ParticleKind::ScorePop: {
             const char* t = TextFormat("%d", p.value);
-            int w = MeasureText(t, 16);
-            GlowText(t, (int)p.pos.x - w / 2, (int)p.pos.y, 16, WithAlpha(p.color, a));
+            int fs = (int)p.size;
+            int w = MeasureText(t, fs);
+            GlowText(t, (int)p.pos.x - w / 2, (int)p.pos.y, fs, WithAlpha(p.color, a));
             break;
         }
         default:

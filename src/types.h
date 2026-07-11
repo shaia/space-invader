@@ -93,6 +93,13 @@ struct ActiveEffects {
     bool bigShotArmed = false;
 };
 
+// ---- combo streak (Productivity Streak) ----
+struct Combo {
+    int chain = 0;    // consecutive kills within the window
+    int tier = 0;     // 0..3, indexes cfg::kComboMult
+    float timer = 0;  // seconds left before the streak lapses
+};
+
 // ---- per-run stats (drives the Performance Review + reactive commentary) ----
 struct RunStats {
     int shotsFired = 0;

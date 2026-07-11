@@ -40,6 +40,8 @@ struct Game {
     float noShootTimer = 0.0f;   // Pacifist Run
     bool pacifistChecked = false;
     RunStats stats{};
+    Combo combo{};
+    bool comboBroken = false;    // set when a hit breaks a tier>=1 streak; consumed by reactive commentary
     Rng rng{};
 
     AudioBank* audio = nullptr;  // owned by main
@@ -54,6 +56,7 @@ void UpdatePlaying(Game& g, float dt);
 void DrawPlaying(const Game& g);
 void ResolveCollisions(Game& g);
 void AddScore(Game& g, int points);
+void ComboKill(Game& g, Vector2 pos, int basePts, Color c);  // scores a kill through the combo multiplier
 const Modifier& CurrentMod(const Game& g);
 Rectangle PlayerRect(const Game& g);
 bool WorldFrozen(const Game& g);  // death pause / intermission
@@ -108,7 +111,7 @@ void SpawnDebris(Game& g, Vector2 pos, Color c, int count);
 void SpawnConfetti(Game& g, Vector2 pos, int count);
 void SpawnTrail(Game& g, Vector2 pos, Color c);
 void SpawnShockwave(Game& g, Vector2 pos, Color c, float radius);
-void SpawnScorePop(Game& g, Vector2 pos, int points, Color c);
+void SpawnScorePop(Game& g, Vector2 pos, int points, Color c, float size = 16.0f);
 void SpawnMuzzle(Game& g, Vector2 pos, Color c);
 void UpdateParticles(Game& g, float dt);
 void DrawParticles(const Game& g);

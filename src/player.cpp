@@ -93,6 +93,13 @@ void HitPlayer(Game& g, std::string_view cause) {
     Player& p = g.player;
     if (!p.alive || p.invuln > 0) return;
 
+    // any hit that lands breaks the productivity streak
+    if (g.combo.tier >= 1) {
+        PushToast(g, content::kComboReset);
+        g.comboBroken = true;
+    }
+    g.combo.chain = 0; g.combo.tier = 0; g.combo.timer = 0;
+
     if (p.shieldHits > 0) {
         p.shieldHits--;
         p.invuln = 0.5f;
