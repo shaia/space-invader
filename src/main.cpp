@@ -71,6 +71,7 @@ int main() {
             DrawPlaying(g);
             if (g.gameOver) {
                 if (g.score % 10000 == 1978) TryAward(g, Ach::Y1978);
+                if (g.mode == RunMode::Daily) TryAward(g, Ach::MandatoryOvertime);
                 hs.achMask |= g.uifx.achAwarded;
                 hs.Save();
                 next = Screen::GameOver;

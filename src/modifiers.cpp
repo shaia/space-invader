@@ -21,6 +21,13 @@ const Modifier kTable[(int)ModifierId::COUNT] = {
      "The real invaders are at a convention.", false, false, false, false, 0, 1.0f, 1.0f, true, false},
     {ModifierId::MirrorMatch, "MIRROR MATCH",
      "Union rules: equal representation.", false, false, false, false, 0, 1.0f, 1.0f, false, true},
+    // id, name, tagline, invert, invisible, compliments, disco, rowsLower, scoreMult, scale, wobbly, mirror, noBunkers, reorg, homingBombs
+    {ModifierId::ReturnToOffice, "RETURN TO OFFICE",
+     "The bunkers are now hot desks.", false, false, false, false, 0, 1.25f, 1.0f, false, false, true, false, false},
+    {ModifierId::QuarterlyReorg, "QUARTERLY REORG",
+     "Your department has been restructured. Again.", false, false, false, false, 0, 1.0f, 1.0f, false, false, false, true, false},
+    {ModifierId::Micromanagement, "MICROMANAGEMENT",
+     "The bombs have opinions about your position.", false, false, false, false, 0, 1.0f, 1.0f, false, false, false, false, true},
 };
 } // namespace
 

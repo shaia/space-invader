@@ -174,6 +174,12 @@ inline constexpr AchDef kAch[] = {
     {"CEASEFIRE VIOLATION",      "You shot during the break. Noted."},
     {"THIS IS FINE",             "Wave cleared. Bunkers: none."},
     {"1978",                     "Your score ends in 1978. Nobody planned this."},
+    {"PROMOTION PENDING",        "x5 streak. The board is nervous."},
+    {"WORKERS' COMP",            "Five near-misses in one wave. Invoiced."},
+    {"PAPER TRAIL",              "Three memos signed. Legally binding."},
+    {"SEVERANCE PACKAGE",        "The last employee has been let go."},
+    {"BILLABLE HOURS",           "You out-lawyered the lawyer."},
+    {"MANDATORY OVERTIME",       "You came in on a scheduled day."},
 };
 
 // ---- boss dialogue ----

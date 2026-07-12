@@ -55,6 +55,7 @@ bool AnyBunkerAlive(const Game& g) {
 
 // Scan the shot's column band for the first solid cell in its travel direction.
 bool ShotHitsBunker(const Game& g, const Shot& s, Vector2& hitPoint) {
+    if (CurrentMod(g).noBunkers) return false;  // RETURN TO OFFICE: shots pass through
     float bw = cfg::kBunkerCols * cfg::kBunkerCell;
     float bh = cfg::kBunkerRows * cfg::kBunkerCell;
     bool movingDown = s.vel.y > 0;
@@ -89,6 +90,7 @@ bool ShotHitsBunker(const Game& g, const Shot& s, Vector2& hitPoint) {
 }
 
 bool CarveBunkers(Game& g, Vector2 hit, float radius) {
+    if (CurrentMod(g).noBunkers) return false;  // cells are preserved for next wave
     bool carved = false;
     for (auto& b : g.bunkers) {
         if (b.aliveCells == 0) continue;  // entered with cells; a drop to 0 means it just fell
@@ -116,6 +118,7 @@ bool CarveBunkers(Game& g, Vector2 hit, float radius) {
 
 void DrawBunkers(const Game& g) {
     const Modifier& m = CurrentMod(g);
+    if (m.noBunkers) return;  // RETURN TO OFFICE: bunkers are hidden this wave
     Color tint = m.discoHue ? HueCycle(cfg::kColBunker, g.time) : cfg::kColBunker;
     for (const auto& b : g.bunkers) {
         if (b.aliveCells == 0) continue;

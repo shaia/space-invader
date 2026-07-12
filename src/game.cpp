@@ -52,6 +52,7 @@ void ComboKill(Game& g, Vector2 pos, int basePts, Color c) {
         if (cb.chain >= cfg::kComboTierChain[t]) tier = t + 1;
     cb.tier = tier;
     if (cb.chain > g.stats.maxChain) g.stats.maxChain = cb.chain;
+    if (tier >= 3) TryAward(g, Ach::PromotionPending);
 
     AddScore(g, basePts * cfg::kComboMult[tier]);
 
@@ -165,7 +166,13 @@ void FinishWave(Game& g) {
 }
 
 void UpdateShots(Game& g, float dt) {
+    bool homing = CurrentMod(g).homingBombs;
     for (auto& s : g.shots) {
+        if (homing && !s.fromPlayer && s.kind == ShotKind::Bomb) {  // MICROMANAGEMENT drift
+            float dir = g.player.pos.x - s.pos.x;
+            s.vel.x += (dir > 0 ? 1.0f : -1.0f) * 60.0f * dt;
+            s.vel.x = fmaxf(-90.0f, fminf(90.0f, s.vel.x));
+        }
         s.pos.x += s.vel.x * dt;
         s.pos.y += s.vel.y * dt;
         if (s.kind == ShotKind::Clipboard) s.spin += 420.0f * dt;
@@ -362,6 +369,7 @@ void ResolveCollisions(Game& g) {
                 AddScore(g, cfg::kGrazePoints);
                 g.stats.grazes++;
                 g.stats.waveGrazes++;
+                if (g.stats.waveGrazes >= cfg::kGrazeWaveAch) TryAward(g, Ach::WorkersComp);
                 if (g.combo.timer > 0)  // extends an active streak; never starts one
                     g.combo.timer = fminf(cfg::kComboWindow, g.combo.timer + cfg::kGrazeComboExtend);
                 SpawnScorePop(g, {s.pos.x, s.pos.y - 10.0f}, cfg::kGrazePoints, cfg::kColUfo, 14.0f,
