@@ -25,6 +25,9 @@ struct Rng {
 // ---- screens ----
 enum class Screen { Title, Playing, Paused, GameOver, PerformanceReview, HighScoreEntry, Quit };
 
+// ---- run mode ----
+enum class RunMode : uint8_t { Endless, Daily };
+
 // ---- bubble anchor sentinels ----
 // Shared: enemy shots record who fired them (for the exit interview), so these
 // live above the entity structs that reference them.
@@ -98,6 +101,45 @@ struct Combo {
     int chain = 0;    // consecutive kills within the window
     int tier = 0;     // 0..3, indexes cfg::kComboMult
     float timer = 0;  // seconds left before the streak lapses
+};
+
+// ---- boss memos (sign one perk-with-a-catch after each boss) ----
+enum class MemoId : uint8_t {
+    EspressoBudget, PerformanceBonus, KeyPersonInsurance,
+    FlexibleHours, OpenFloorPlan, StockOptions, COUNT
+};
+
+struct Memo {
+    MemoId id = MemoId::EspressoBudget;
+    std::string_view name, buff, drawback;
+    int   extraShotCap = 0;   // + concurrent player shots
+    int   lifeNow = 0;        // lives granted once on signing
+    int   shieldCap = 0;      // 0 = no override; >0 caps shield hits
+    float bombSpeedMult = 1.0f;
+    float scoreMult = 1.0f;
+    float dropMult = 1.0f;
+    float marchMult = 1.0f;   // >1 = slower march
+    float bombRateMult = 1.0f;
+    float grazeMult = 1.0f;
+    float hitboxMult = 1.0f;  // >1 = larger (easier to hit / catch pickups)
+    float ufoGapMult = 1.0f;  // <1 = UFO appears more often
+    float ufoPayMult = 1.0f;
+};
+
+// folded effect of every signed memo, recomputed on demand
+struct MemoFx {
+    int   extraShotCap = 0;
+    int   shieldCap = cfg::kShieldHits;
+    float bombSpeedMult = 1.0f, scoreMult = 1.0f, dropMult = 1.0f;
+    float marchMult = 1.0f, bombRateMult = 1.0f, grazeMult = 1.0f, hitboxMult = 1.0f;
+    float ufoGapMult = 1.0f, ufoPayMult = 1.0f;
+};
+
+struct MemoOffer {
+    bool active = false;
+    MemoId pick[3]{};
+    int count = 0;         // valid picks (1-3)
+    float timer = 0.0f;    // seconds until auto-decline
 };
 
 // ---- per-run stats (drives the Performance Review + reactive commentary) ----

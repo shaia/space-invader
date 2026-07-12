@@ -45,6 +45,12 @@ struct Game {
     RunStats stats{};
     Combo combo{};
     bool comboBroken = false;    // set when a hit breaks a tier>=1 streak; consumed by reactive commentary
+    uint32_t memoMask = 0;       // signed boss memos
+    MemoOffer memoOffer{};
+    RunMode mode = RunMode::Endless;
+    uint32_t dailySeed = 0;      // yyyymmdd for the daily challenge
+    Rng setupRng{};              // deterministic per-wave stream (layout / modifier / memos)
+    bool titleShowDaily = false; // title screen: which leaderboard to show
     Rng rng{};
 
     AudioBank* audio = nullptr;  // owned by main
@@ -64,6 +70,7 @@ const Modifier& CurrentMod(const Game& g);
 Rectangle PlayerRect(const Game& g);
 bool WorldFrozen(const Game& g);  // death pause / intermission
 int RandomAliveInvader(Game& g);  // random living grid index, or -1 if none
+uint32_t Hash(uint32_t a, uint32_t b, uint32_t c = 0);  // stable mix for deterministic daily rolls
 
 // ---- invaders.cpp ----
 void SpawnGrid(Game& g);
@@ -89,7 +96,7 @@ bool AnyBunkerAlive(const Game& g);
 void DrawBunkers(const Game& g);
 
 // ---- powerups.cpp ----
-void MaybeDropPickup(Game& g, Vector2 pos);
+void MaybeDropPickup(Game& g, Vector2 pos, int idx);  // idx = grid index (daily-deterministic drops)
 void UpdatePickups(Game& g, float dt);
 void ActivatePickup(Game& g, PowerKind kind);
 void UpdateEffects(Game& g, float dt);
@@ -100,6 +107,13 @@ int ActiveEffectCount(const Game& g);
 // ---- modifiers.cpp ----
 const Modifier& GetModifier(ModifierId id);
 ModifierId PickNextModifier(Game& g);
+
+// ---- memos.cpp ----
+const Memo& GetMemo(MemoId id);
+MemoFx CollectMemoFx(const Game& g);   // fold every signed memo's effect
+void OfferMemos(Game& g);              // present three unsigned memos
+void UpdateMemoOffer(Game& g, float dt);
+void DrawMemoOffer(const Game& g);
 
 // ---- boss.cpp ----
 void StartBoss(Game& g);

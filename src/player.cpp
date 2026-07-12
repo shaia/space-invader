@@ -7,7 +7,7 @@ void PlayerFire(Game& g) {
     Player& p = g.player;
     if (!p.alive || p.fireCooldown > 0.0f) return;
 
-    int maxShots = g.fx.rapid > 0 ? 4 : 1;
+    int maxShots = (g.fx.rapid > 0 ? 4 : 1) + CollectMemoFx(g).extraShotCap;
     int mine = 0;
     for (const auto& s : g.shots)
         if (s.fromPlayer) mine++;

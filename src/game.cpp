@@ -7,16 +7,23 @@
 const Modifier& CurrentMod(const Game& g) { return GetModifier(g.wave.modifier); }
 
 Rectangle PlayerRect(const Game& g) {
-    return {g.player.pos.x - cfg::kPlayerW / 2, g.player.pos.y - cfg::kPlayerH / 2,
-            cfg::kPlayerW, cfg::kPlayerH};
+    float hb = CollectMemoFx(g).hitboxMult;   // OPEN FLOOR PLAN grows the hitbox
+    float w = cfg::kPlayerW * hb, h = cfg::kPlayerH * hb;
+    return {g.player.pos.x - w / 2, g.player.pos.y - h / 2, w, h};
 }
 
 bool WorldFrozen(const Game& g) {
     return !g.player.alive || g.wave.clearing;
 }
 
+uint32_t Hash(uint32_t a, uint32_t b, uint32_t c) {
+    uint32_t h = a * 2654435761u + b * 40503u + c * 2246822519u + 0x9E3779B9u;
+    h ^= h >> 15; h *= 0x2C1B3C6Du; h ^= h >> 12; h *= 0x297A2D39u; h ^= h >> 15;
+    return h ? h : 0x9E3779B9u;  // never a zero seed
+}
+
 void AddScore(Game& g, int points) {
-    g.score += (int)((float)points * CurrentMod(g).scoreMult);
+    g.score += (int)((float)points * CurrentMod(g).scoreMult * CollectMemoFx(g).scoreMult);
     if (g.score > g.hiScore) g.hiScore = g.score;
 }
 
@@ -87,10 +94,15 @@ void ResetRun(Game& g) {
     AudioBank* audio = g.audio;
     int hi = g.hiScore;
     uint32_t rngState = g.rng.s;
+    RunMode mode = g.mode;          // the chosen mode/seed must survive the wipe
+    uint32_t dailySeed = g.dailySeed;
     g = Game{};
     g.audio = audio;
     g.hiScore = hi;
+    g.mode = mode;
+    g.dailySeed = dailySeed;
     g.rng.s = rngState ? rngState : 0x9E3779B9u;
+    if (mode == RunMode::Daily) g.rng.s = dailySeed ? dailySeed : 0x9E3779B9u;
     g.player.pos = {cfg::kCanvasW / 2.0f, cfg::kPlayerY};
     g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
     InitStarfield(g);
@@ -102,6 +114,11 @@ void StartWave(Game& g, int number) {
     g.wave.number = number;
     g.wave.clearing = false;
     g.wave.intermission = 0;
+    // Deterministic per-wave stream for layout/modifier/memo rolls. In daily mode
+    // it hashes from the date so everyone gets the same wave; in endless it just
+    // forks off the main rng, so there's a single code path downstream.
+    g.setupRng.s = (g.mode == RunMode::Daily) ? Hash(g.dailySeed, (uint32_t)number)
+                                              : (g.rng.next() | 1u);
     g.wave.bossWave = (number % cfg::kBossEvery == 0);
     g.wave.modifier = ModifierId::None;
     g.boss.active = false;
@@ -203,6 +220,21 @@ void DebugKeys(Game& g) {
         g.player.invuln = 0;
         HitPlayer(g, "debug");
     }
+    if (IsKeyPressed(KEY_F7))    // +10 combo chain (tiers / callouts / hit-stop / pitch)
+        for (int i = 0; i < 10; i++)
+            ComboKill(g, {g.player.pos.x, g.player.pos.y - 40.0f}, 10, cfg::kColAccent);
+    if (IsKeyPressed(KEY_F8)) {  // jump to the next boss wave
+        int next = ((g.wave.number / cfg::kBossEvery) + 1) * cfg::kBossEvery;
+        for (auto& v : g.invaders) v.alive = false;
+        g.aliveCount = 0;
+        StartWave(g, next);
+    }
+    if (IsKeyPressed(KEY_F9)) {  // simulate a post-boss memo offer
+        g.wave.clearing = true;
+        g.wave.intermission = cfg::kIntermission + 5.0f;
+        OfferMemos(g);
+    }
+    if (IsKeyPressed(KEY_F10)) g.gameOver = true;  // jump to the Performance Review
 }
 #endif
 
@@ -246,14 +278,14 @@ void ResolveCollisions(Game& g) {
                             cfg::kUfoW, cfg::kUfoH};
             if (CheckCollisionRecs(sr, ur)) {
                 if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
-                int pts = 50 * g.rng.irange(1, 6);
+                int pts = (int)(50 * g.rng.irange(1, 6) * CollectMemoFx(g).ufoPayMult);
                 ComboKill(g, {g.ufo.pos.x, g.ufo.pos.y - 20.0f}, pts, cfg::kColUfo);
                 SpawnExplosion(g, g.ufo.pos, cfg::kColUfo, 30);
                 SpawnConfetti(g, g.ufo.pos, 20);
                 PushToast(g, TextFormat("THE CONSULTANT: invoiced for %d pts.", pts));
                 PlaySfx(*g.audio, Sfx::Pop, 0.7f);
                 g.ufo.active = false;
-                g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap);
+                g.ufo.spawnTimer = g.rng.range(cfg::kUfoMinGap, cfg::kUfoMaxGap) * CollectMemoFx(g).ufoGapMult;
                 consumed = !s.pierce;
             }
         }
@@ -302,9 +334,9 @@ void ResolveCollisions(Game& g) {
         // graze: an enemy shot sliding past (near but not touching) pays hazard pay.
         // Checked before the hit test so the two are mutually exclusive this frame.
         if (!s.grazed && g.player.alive && g.player.invuln <= 0) {
+            float gr = cfg::kGrazeRadius * CollectMemoFx(g).grazeMult;  // OPEN FLOOR PLAN widens it
             Rectangle pr = PlayerRect(g);
-            Rectangle grazeBox = {pr.x - cfg::kGrazeRadius, pr.y - cfg::kGrazeRadius,
-                                  pr.width + 2 * cfg::kGrazeRadius, pr.height + 2 * cfg::kGrazeRadius};
+            Rectangle grazeBox = {pr.x - gr, pr.y - gr, pr.width + 2 * gr, pr.height + 2 * gr};
             Rectangle sr = ShotRect(s);
             if (CheckCollisionRecs(sr, grazeBox) && !CheckCollisionRecs(sr, pr)) {
                 s.grazed = true;
@@ -374,6 +406,7 @@ void UpdatePlaying(Game& g, float dt) {
     }
 
     if (g.wave.clearing) {
+        if (g.memoOffer.active) { UpdateMemoOffer(g, dt); return; }  // pauses the countdown
         g.wave.intermission -= dt;  // real dt: the between-wave beat isn't frozen
         if (g.wave.intermission <= 0)
             StartWave(g, g.wave.number + 1);
@@ -434,6 +467,11 @@ void DrawHud(const Game& g) {
     const char* wv = g.wave.bossWave ? "WAVE: MGMT" : TextFormat("WAVE %d", g.wave.number);
     int ww = MeasureText(wv, 20);
     GlowText(wv, cfg::kCanvasW - ww - 16, 12, 20, cfg::kColHud);
+    if (g.mode == RunMode::Daily) {
+        const char* dl = "MANDATORY OVERTIME";
+        int dw = MeasureText(dl, 13);
+        DrawText(dl, cfg::kCanvasW - dw - 16, 36, 13, WithAlpha(cfg::kColAccent, 0.9f));
+    }
 
     const Modifier& m = CurrentMod(g);
     if (m.id != ModifierId::None) {
@@ -470,7 +508,7 @@ void DrawHud(const Game& g) {
                             g.hitStop * 1000.0f), 14, 134, 12, GREEN);
         DrawText(TextFormat("acc %d/%d  grazes %d", g.stats.shotsHit, g.stats.shotsFired,
                             g.stats.grazes), 14, 150, 12, GREEN);
-        DrawText("F2 wave F3 pwr F4 mod F5 thin F6 die", 14, 172, 12, GREEN);
+        DrawText("F2wave F3pwr F4mod F5thin F6die F7combo F8boss F9memo F10end", 14, 172, 11, GREEN);
     }
 #endif
 }
@@ -568,4 +606,5 @@ void DrawPlaying(const Game& g) {
 
     DrawHud(g);
     DrawEffectHud(g);
+    if (g.memoOffer.active) DrawMemoOffer(g);
 }

@@ -154,6 +154,7 @@ inline constexpr int   kGradeS = 88, kGradeA = 72, kGradeB = 56, kGradeC = 40, k
 // ---- waves / bosses / modifiers ----
 inline constexpr int   kFirstModifierWave = 3;
 inline constexpr int   kBossEvery         = 5;
+inline constexpr float kMemoTimeout       = 8.0f;   // memo offer auto-declines after this
 inline constexpr float kWaveCardDur       = 2.6f;
 inline constexpr float kIntermission      = 1.2f;
 

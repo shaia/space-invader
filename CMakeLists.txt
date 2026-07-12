@@ -23,6 +23,7 @@ add_executable(space_invader_plus
   src/bunkers.cpp
   src/powerups.cpp
   src/modifiers.cpp
+  src/memos.cpp
   src/boss.cpp
   src/particles.cpp
   src/ui_fx.cpp

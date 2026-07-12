@@ -1,8 +1,20 @@
 #include "highscores.h"
 #include "content.h"
 #include <algorithm>
+#include <ctime>
 #include <fstream>
 #include <sstream>
+
+uint32_t DailySeed() {
+    time_t t = time(nullptr);
+    tm lt{};
+#if defined(_WIN32)
+    localtime_s(&lt, &t);
+#else
+    localtime_r(&t, &lt);
+#endif
+    return (uint32_t)((lt.tm_year + 1900) * 10000 + (lt.tm_mon + 1) * 100 + lt.tm_mday);
+}
 
 namespace {
 const char* kHeaderV1 = "SIWHD v1";
@@ -63,7 +75,12 @@ void HighScores::LoadOrDefaults() {
 
     if (v2) {
         std::array<ScoreEntry, 10> dailyT{};
-        if (ReadTable(in, dailyT) == dailyT.size()) daily = dailyT;
+        // only adopt the stored daily ledger if it belongs to today; else it stays
+        // the empty default and a new day's ledger starts fresh
+        if (ReadTable(in, dailyT) == dailyT.size() && dailyDate == (int)DailySeed())
+            daily = dailyT;
+        else
+            dailyDate = 0;
     }
 }
 
