@@ -6,6 +6,7 @@
 #include <string>
 
 std::filesystem::path ConfigDir();  // platform_paths.cpp; created on first call
+uint32_t DailySeed();               // today's yyyymmdd, the daily-challenge seed
 
 struct ScoreEntry {
     int score = 0;

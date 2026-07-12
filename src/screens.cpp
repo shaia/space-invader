@@ -45,22 +45,36 @@ Screen UpdateDrawTitle(Game& g, const HighScores& hs, float timer) {
     DrawCentered(flavor, 448, 18, cfg::kColHud);
 
     if (fmodf(timer, 1.0f) < 0.6f)
-        DrawCenteredGlow("PRESS ENTER TO NEGOTIATE", 510, 22, RAYWHITE);
+        DrawCenteredGlow("ENTER: NEGOTIATE    M: MANDATORY OVERTIME (DAILY)", 510, 20, RAYWHITE);
 
-    // high-score table (the invaders keep the books)
-    DrawCentered("COLLECTIVE BARGAINING RECORDS", 568, 18, WithAlpha(cfg::kColAccent, 0.9f));
-    for (size_t i = 0; i < hs.table.size(); i++) {
-        const ScoreEntry& e = hs.table[i];
+    // leaderboard — TAB flips between the endless records and today's daily ledger
+    const auto& board = g.titleShowDaily ? hs.daily : hs.table;
+    if (g.titleShowDaily)
+        DrawCentered(TextFormat("OVERTIME LEDGER - %u", (unsigned)DailySeed()), 568, 18,
+                     WithAlpha(cfg::kColAccent, 0.9f));
+    else
+        DrawCentered("COLLECTIVE BARGAINING RECORDS", 568, 18, WithAlpha(cfg::kColAccent, 0.9f));
+    for (size_t i = 0; i < board.size(); i++) {
+        const ScoreEntry& e = board[i];
         const char* line = TextFormat("%2d.  %-10s %8d", (int)i + 1, e.name.c_str(), e.score);
         int w = MeasureText(line, 18);
         DrawText(line, cfg::kCanvasW / 2 - w / 2, 598 + (int)i * 24, 18,
                  WithAlpha(cfg::kColHud, i % 2 ? 0.7f : 0.95f));
     }
 
-    DrawCentered("ARROWS/AD MOVE   SPACE FIRE   P PAUSE", 850, 16, WithAlpha(cfg::kColHud, 0.6f));
+    DrawCentered("ARROWS/AD MOVE   SPACE FIRE   P PAUSE   TAB SWITCH BOARD", 850, 16,
+                 WithAlpha(cfg::kColHud, 0.6f));
     DrawCentered("(c) 1978, allegedly", 882, 15, WithAlpha(cfg::kColHud, 0.4f));
 
+    if (IsKeyPressed(KEY_TAB)) { g.titleShowDaily = !g.titleShowDaily; PlaySfx(*g.audio, Sfx::Blip, 1.2f); }
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+        g.mode = RunMode::Endless;
+        PlaySfx(*g.audio, Sfx::Blip);
+        return Screen::Playing;
+    }
+    if (IsKeyPressed(KEY_M)) {
+        g.mode = RunMode::Daily;
+        g.dailySeed = DailySeed();
         PlaySfx(*g.audio, Sfx::Blip);
         return Screen::Playing;
     }
@@ -96,8 +110,10 @@ Screen UpdateDrawGameOver(Game& g, const HighScores& hs, float timer, float dt) 
                cfg::kColHud);
 
     DrawCenteredGlow(TextFormat("FINAL SCORE: %d", g.score), 490, 28, cfg::kColPlayer);
-    if (hs.Qualifies(g.score))
-        DrawCentered("A new collective bargaining record.", 530, 16, cfg::kColAccent);
+    if (hs.Qualifies(g.score, g.mode == RunMode::Daily))
+        DrawCentered(g.mode == RunMode::Daily ? "A new overtime ledger record."
+                                              : "A new collective bargaining record.",
+                     530, 16, cfg::kColAccent);
 
     if (timer > 1.2f && fmodf(timer, 1.0f) < 0.6f)
         DrawCentered("PRESS ENTER", 590, 20, RAYWHITE);
@@ -189,7 +205,8 @@ Screen UpdateDrawPerformanceReview(Game& g, HighScores& hs, float timer, float d
     if (revealed && (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER))) {
         if (gi > hs.bestGrade) { hs.bestGrade = gi; hs.Save(); }
         PlaySfx(*g.audio, Sfx::Blip);
-        return hs.Qualifies(g.score) ? Screen::HighScoreEntry : Screen::Title;
+        return hs.Qualifies(g.score, g.mode == RunMode::Daily) ? Screen::HighScoreEntry
+                                                               : Screen::Title;
     }
     return Screen::PerformanceReview;
 }
@@ -238,7 +255,9 @@ Screen UpdateDrawHighScoreEntry(Game& g, HighScores& hs, ScoreEntryState& es, fl
     }
 
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
-        hs.Insert(g.score, es.initials);
+        bool daily = g.mode == RunMode::Daily;
+        hs.Insert(g.score, es.initials, daily);
+        if (daily) hs.dailyDate = (int)g.dailySeed;  // stamp today's ledger
         hs.Save();
         PlaySfx(*g.audio, Sfx::Ding);
         return Screen::Title;
