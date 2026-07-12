@@ -212,6 +212,18 @@ void DrawShotArt(const Game& g, const Shot& s) {
     case ShotKind::Beamlet:
         GlowRect({s.pos.x - 3, s.pos.y - 9, 6, 18}, cfg::kColBeamlet);
         break;
+    case ShotKind::PaperPlane: {
+        float deg = atan2f(s.vel.y, s.vel.x) * 57.2958f + 90.0f;  // point along travel
+        DrawPoly(s.pos, 3, 11.0f, deg, WithAlpha(cfg::kColClipboard, 0.35f));
+        DrawPoly(s.pos, 3, 7.0f, deg, cfg::kColClipboard);
+        break;
+    }
+    case ShotKind::Subpoena:
+        GlowRectRot({s.pos.x - 11, s.pos.y - 14, 22, 28}, s.spin * 0.3f, cfg::kColClipboard);
+        DrawText("SUB", (int)s.pos.x - 9, (int)s.pos.y - 5, 9, cfg::kColBg);
+        break;
+    default:
+        break;
     }
 }
 

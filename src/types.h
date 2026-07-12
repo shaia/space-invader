@@ -56,7 +56,9 @@ struct Invader {
     float hitFlash = 0.0f;
 };
 
-enum class ShotKind : uint8_t { PlayerShot, Bomb, Compliment, Clipboard, BigShot, Beamlet, Brick };
+enum class ShotKind : uint8_t {
+    PlayerShot, Bomb, Compliment, Clipboard, BigShot, Beamlet, Brick, PaperPlane, Subpoena
+};
 
 struct Shot {
     Vector2 pos{};
@@ -197,7 +199,7 @@ struct Modifier {
 };
 
 // ---- boss ----
-enum class BossKind : uint8_t { Karen, Local1978, Producer };
+enum class BossKind : uint8_t { Karen, Local1978, Producer, Lawyer };
 
 struct Minion {
     Vector2 pos{};
@@ -242,6 +244,12 @@ struct Boss {
     // Producer
     BeamAttack creep{};
     float brickTimer = 0.0f;
+    // Lawyer
+    bool objection = false;       // OBJECTION phase: shots are inadmissible
+    float objectionT = 0.0f;
+    bool settlementUsed = false;
+    float settlementHp = 0.0f;    // >0 = a destructible settlement briefcase is on screen
+    Vector2 settlementPos{};
 };
 
 // ---- waves ----

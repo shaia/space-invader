@@ -185,6 +185,8 @@ Rectangle ShotRect(const Shot& s) {
     case ShotKind::BigShot: return {s.pos.x - 26, s.pos.y - 26, 52, 52};
     case ShotKind::Clipboard: return {s.pos.x - 8, s.pos.y - 10, 16, 20};
     case ShotKind::Brick: return {s.pos.x - 22, s.pos.y - 10, 44, 20};
+    case ShotKind::Subpoena: return {s.pos.x - 12, s.pos.y - 14, 24, 28};
+    case ShotKind::PaperPlane: return {s.pos.x - 10, s.pos.y - 8, 20, 16};
     case ShotKind::Compliment: return {s.pos.x - 20, s.pos.y - 8, 40, 16};
     default: return {s.pos.x - cfg::kShotW / 2, s.pos.y - cfg::kShotH / 2, cfg::kShotW, cfg::kShotH};
     }
@@ -294,6 +296,23 @@ void ResolveCollisions(Game& g) {
             bool bhit = BossShotHit(g, s);
             if (bhit && !s.tallied) { s.tallied = true; g.stats.shotsHit++; }
             consumed = bhit;
+        }
+
+        // shootable enemy projectiles (Lawyer subpoenas); BigShot handles them below
+        if (!consumed && s.kind != ShotKind::BigShot) {
+            for (auto& e : g.shots) {
+                if (e.fromPlayer || e.hp <= 0) continue;
+                if (!CheckCollisionRecs(sr, ShotRect(e))) continue;
+                e.hp -= 1;
+                if (!s.tallied) { s.tallied = true; g.stats.shotsHit++; }
+                if (e.hp <= 0) {
+                    ComboKill(g, e.pos, 25, cfg::kColClipboard);
+                    SpawnExplosion(g, e.pos, cfg::kColClipboard, 10);
+                    e.pos.y = cfg::kCanvasH + 100;
+                }
+                consumed = !s.pierce;
+                break;
+            }
         }
 
         // BigShot bulldozes enemy paperwork

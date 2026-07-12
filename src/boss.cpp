@@ -11,12 +11,12 @@ constexpr float kSaucerW = 70, kSaucerH = 26, kSignW = 78, kSignH = 42;
 constexpr float kProdW = 200, kProdH = 140, kProdY = 200;
 
 float ScaleForWave(int wave) {
-    int round = (wave / cfg::kBossEvery - 1) / 3;  // 0 for waves 5/10/15, then +
+    int round = (wave / cfg::kBossEvery - 1) / 4;  // HP scales up every four boss rounds
     return 1.0f + 0.35f * (float)round;
 }
 
 BossKind KindForWave(int wave) {
-    int slot = (wave / cfg::kBossEvery - 1) % 3;
+    int slot = (wave / cfg::kBossEvery - 1) % 4;  // Karen / Local / Producer / Lawyer
     return (BossKind)slot;
 }
 
@@ -33,6 +33,7 @@ void CheckDialogue(Game& g) {
     case BossKind::Karen:     l75 = content::kKaren75; l50 = content::kKaren50; l25 = content::kKaren25; break;
     case BossKind::Local1978: l75 = content::kLocal75; l50 = content::kLocal50; l25 = content::kLocal25; break;
     case BossKind::Producer:  l75 = content::kProd75;  l50 = content::kProd50;  l25 = content::kProd25;  break;
+    case BossKind::Lawyer:    l75 = content::kLawyer75; l50 = content::kLawyer50; l25 = content::kLawyer25; break;
     }
     bool crossed = false;
     if (f <= 0.75f && !b.saidAt75) { b.saidAt75 = true; BossSay(g, l75); crossed = true; }
@@ -55,6 +56,7 @@ void BossDefeated(Game& g) {
     const char* death = content::kKarenDeath;
     if (b.kind == BossKind::Local1978) death = content::kLocalDeath;
     if (b.kind == BossKind::Producer) death = content::kProdDeath;
+    if (b.kind == BossKind::Lawyer) death = content::kLawyerDeath;
     PushToast(g, death);
 
     if (b.kind == BossKind::Karen) TryAward(g, Ach::SpeakToTheManager);
@@ -239,6 +241,91 @@ void UpdateProducer(Game& g, float dt) {
     }
 }
 
+// ---------- THE LAWYER ----------
+constexpr float kLawyerW = 150, kLawyerH = 54;
+
+void UpdateLawyer(Game& g, float dt) {
+    Boss& b = g.boss;
+    b.timer += dt;
+
+    // once below half health, table a destructible settlement briefcase
+    if (!b.settlementUsed && b.settlementHp <= 0 && b.hp <= b.maxHp * 0.5f) {
+        b.settlementHp = 10.0f * ScaleForWave(g.wave.number);
+        b.settlementPos = {g.rng.range(cfg::kPlayfieldMargin + 90, cfg::kCanvasW - cfg::kPlayfieldMargin - 90),
+                           kKarenY + 240.0f};
+        PushToast(g, "Settlement tabled. Shoot to accept.");
+    }
+
+    switch (b.phase) {
+    case 0: {  // sweep + cease-and-desist fans (paper planes)
+        b.pos.x = cfg::kCanvasW / 2.0f + sinf(b.timer * 0.9f) * 220.0f;
+        b.pos.y = kKarenY + sinf(b.timer * 1.9f) * 12.0f;
+        b.attackTimer -= dt;
+        if (b.attackTimer <= 0) {
+            b.attackTimer = 1.8f;
+            for (int i = -2; i <= 2; i++) {  // five-way downward spread
+                float ang = 1.5708f + (float)i * 0.25f;
+                float sp = cfg::kBombSpeed * 0.95f;
+                EnemyShot(g, {b.pos.x, b.pos.y + kLawyerH / 2},
+                          {cosf(ang) * sp, sinf(ang) * sp}, ShotKind::PaperPlane);
+            }
+        }
+        if (b.timer > 3.5f) { b.timer = 0; b.phase = 1; b.attackTimer = 0.6f; }
+        break;
+    }
+    case 1: {  // homing subpoenas: slow, tanky, one player-hit to destroy
+        b.pos.x += (g.player.pos.x - b.pos.x) * fminf(1.0f, dt * 1.5f);
+        b.attackTimer -= dt;
+        if (b.attackTimer <= 0) {
+            b.attackTimer = 1.2f;
+            Vector2 at = {b.pos.x, b.pos.y + kLawyerH / 2};
+            Vector2 d = {g.player.pos.x - at.x, g.player.pos.y - at.y};
+            float len = sqrtf(d.x * d.x + d.y * d.y);
+            if (len < 1) len = 1;
+            Shot s;
+            s.pos = at;
+            s.vel = {d.x / len * 140.0f, d.y / len * 140.0f};
+            s.kind = ShotKind::Subpoena;
+            s.fromPlayer = false;
+            s.owner = kBubbleAnchorBoss;
+            s.hp = 2;  // takes two player shots to quash
+            g.shots.push_back(s);
+        }
+        if (b.timer > 3.0f) { b.timer = 0; b.phase = 2; b.objection = false; b.objectionT = 0; }
+        break;
+    }
+    case 2: {  // OBJECTION: brief invulnerability, then a radial counter-burst
+        b.pos.x += (cfg::kCanvasW / 2.0f - b.pos.x) * fminf(1.0f, dt * 2.0f);
+        b.objection = true;
+        b.objectionT += dt;
+        if (b.objectionT > 1.2f) {
+            for (int i = 0; i < 12; i++) {  // sustained; overruled
+                float ang = (float)i * (6.2831f / 12.0f);
+                EnemyShot(g, b.pos, {cosf(ang) * 180.0f, sinf(ang) * 180.0f}, ShotKind::Beamlet);
+            }
+            b.objection = false;
+            b.phase = 0;
+            b.timer = 0;
+            b.attackTimer = 1.0f;
+        }
+        break;
+    }
+    }
+
+    // subpoena homing: a limited turn toward the player each frame
+    for (auto& s : g.shots) {
+        if (s.fromPlayer || s.kind != ShotKind::Subpoena) continue;
+        Vector2 d = {g.player.pos.x - s.pos.x, g.player.pos.y - s.pos.y};
+        float len = sqrtf(d.x * d.x + d.y * d.y);
+        if (len < 1) len = 1;
+        Vector2 want = {d.x / len * 140.0f, d.y / len * 140.0f};
+        float steer = fminf(1.0f, dt * 1.2f);
+        s.vel.x += (want.x - s.vel.x) * steer;
+        s.vel.y += (want.y - s.vel.y) * steer;
+        s.spin += 200.0f * dt;
+    }
+}
+
 } // namespace
 
 void StartBoss(Game& g) {
@@ -272,6 +359,10 @@ void StartBoss(Game& g) {
         b.pos.y = kProdY;
         intro = content::kProdIntro;
         break;
+    case BossKind::Lawyer:
+        b.maxHp = 80.0f * mult;
+        intro = content::kLawyerIntro;
+        break;
     }
     b.hp = b.maxHp;
     Announce(g, "MANAGEMENT", intro, 3.2f);
@@ -291,6 +382,7 @@ void UpdateBoss(Game& g, float dt) {
     case BossKind::Karen: UpdateKaren(g, dt); break;
     case BossKind::Local1978: UpdateLocal(g, dt); break;
     case BossKind::Producer: UpdateProducer(g, dt); break;
+    case BossKind::Lawyer: UpdateLawyer(g, dt); break;
     }
 }
 
@@ -367,6 +459,45 @@ bool BossShotHit(Game& g, const Shot& s) {
                 if (b.hp <= 0) BossDefeated(g);
                 return true;
             }
+        }
+        return false;
+    }
+
+    if (b.kind == BossKind::Lawyer) {
+        // the settlement briefcase: shooting it out withdraws an objection and
+        // deals a chunk of damage ("Settled out of court.")
+        if (b.settlementHp > 0) {
+            Rectangle sr = {b.settlementPos.x - 28, b.settlementPos.y - 20, 56, 40};
+            if (CheckCollisionPointRec(s.pos, sr)) {
+                b.settlementHp -= dmg;
+                SpawnDebris(g, s.pos, cfg::kColClipboard, 4);
+                PlaySfx(*g.audio, Sfx::Crunch);
+                if (b.settlementHp <= 0) {
+                    b.settlementUsed = true;
+                    b.objection = false;  // motion withdrawn
+                    b.hp -= b.maxHp * 0.15f;
+                    SpawnExplosion(g, b.settlementPos, cfg::kColAccent, 24);
+                    PushToast(g, "Settled out of court.");
+                    CheckDialogue(g);
+                    if (b.hp <= 0) { BossDefeated(g); return true; }
+                }
+                return true;
+            }
+        }
+        Rectangle br = {b.pos.x - kLawyerW / 2, b.pos.y - kLawyerH / 2, kLawyerW, kLawyerH};
+        if (CheckCollisionPointRec(s.pos, br)) {
+            if (b.objection) {  // OBJECTION: evidence inadmissible, no damage
+                SpawnExplosion(g, s.pos, cfg::kColAccent, 4);
+                PlaySfx(*g.audio, Sfx::Blip, 0.6f);
+                return true;
+            }
+            b.hp -= dmg;
+            b.squash = 0.4f;
+            SpawnExplosion(g, s.pos, cfg::kColUfo, 8);
+            PlaySfx(*g.audio, Sfx::BossHit);
+            CheckDialogue(g);
+            if (b.hp <= 0) BossDefeated(g);
+            return true;
         }
         return false;
     }
@@ -462,6 +593,28 @@ void DrawBoss(const Game& g) {
         }
         break;
     }
+    case BossKind::Lawyer: {
+        float w = kLawyerW * (1 + sq * 0.15f), h = kLawyerH * (1 - sq * 0.1f);
+        Rectangle body = {b.pos.x - w / 2, b.pos.y - h / 2, w, h};
+        GlowRect(body, cfg::kColProducer);                              // briefcase-gray chassis
+        DrawRectangleRec({b.pos.x - 18, body.y - 8, 36, 8}, {60, 62, 80, 255});  // handle
+        DrawRectangleRec({b.pos.x - 6, b.pos.y - 6, 12, 10}, cfg::kColHurt);      // tie knot
+        DrawRectangleRec({b.pos.x - 4, b.pos.y + 4, 8, h / 2}, cfg::kColHurt);    // tie
+        DrawRectangleRec({b.pos.x - 30, b.pos.y - 8, 8, 8}, RAYWHITE);            // eyes
+        DrawRectangleRec({b.pos.x + 22, b.pos.y - 8, 8, 8}, RAYWHITE);
+        if (b.objection) {  // OBJECTION shield + banner
+            GlowCircle(b.pos, w * 0.75f, WithAlpha(cfg::kColAccent, 0.18f));
+            const char* obj = "OBJECTION!";
+            int ow = MeasureText(obj, 26);
+            GlowText(obj, (int)(b.pos.x - ow / 2), (int)(b.pos.y - h - 30), 26, cfg::kColAccent);
+        }
+        if (b.settlementHp > 0) {  // the destructible settlement offer
+            Rectangle sr = {b.settlementPos.x - 28, b.settlementPos.y - 20, 56, 40};
+            GlowRect(sr, cfg::kColClipboard);
+            DrawText("SETTLE", (int)b.settlementPos.x - 22, (int)b.settlementPos.y - 6, 12, cfg::kColBg);
+        }
+        break;
+    }
     }
 
     // health bar
@@ -472,7 +625,8 @@ void DrawBoss(const Game& g) {
     DrawRectangleRec({bx, by, bw * frac, 10},
                      frac > 0.5f ? cfg::kColAccent : cfg::kColHurt);
     const char* name = b.kind == BossKind::Karen ? "MOTHERSHIP KAREN"
-                     : b.kind == BossKind::Local1978 ? "UFO LOCAL 1978" : "THE PRODUCER";
+                     : b.kind == BossKind::Local1978 ? "UFO LOCAL 1978"
+                     : b.kind == BossKind::Producer ? "THE PRODUCER" : "THE LAWYER";
     int w = MeasureText(name, 14);
     GlowText(name, (int)(cfg::kCanvasW / 2 - w / 2), (int)by + 16, 14, cfg::kColHud);
 }

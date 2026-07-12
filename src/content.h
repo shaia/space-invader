@@ -195,6 +195,12 @@ inline constexpr const char* kProd50       = "The burndown chart\nis burning up.
 inline constexpr const char* kProd25       = "Let's circle back\nto you losing.";
 inline constexpr const char* kProdDeath    = "Ship it.";
 
+inline constexpr const char* kLawyerIntro  = "THE LAWYER\nYou'll be hearing from everyone.";
+inline constexpr const char* kLawyer75     = "Everything you shoot can\nbe used against you.";
+inline constexpr const char* kLawyer50     = "My billable hour\nstarted in 1978.";
+inline constexpr const char* kLawyer25     = "OBJECTION is not a feeling.\nIt's a motion.";
+inline constexpr const char* kLawyerDeath  = "See you in discovery.";
+
 // ---- system voice ----
 inline constexpr const char* kPauseLines[] = {
     "PAUSED. The invaders are also taking five.",
